@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 Faucet Revolution - Gana hasta 20 USD/hora</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 600px; margin: 0 auto; }
+        .card {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 15px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .header { text-align: center; margin: 30px 0; }
+        .header h1 { font-size: 2.5em; background: linear-gradient(45deg, #f7931a, #ff6b6b); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .balance {
+            font-size: 3em;
+            font-weight: bold;
+            color: #4CAF50;
+            text-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+        }
+        .rate {
+            font-size: 1.2em;
+            color: #ffd700;
+            margin: 10px 0;
+        }
+        .btn {
+            background: linear-gradient(45deg, #f7931a, #ff6b6b);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-size: 1.1em;
+            cursor: pointer;
+            width: 100%;
+            margin: 8px 0;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+        .btn:hover { transform: scale(1.02); }
+        .btn-secondary { background: linear-gradient(45deg, #4CAF50, #45a049); }
+        .btn-withdraw { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            font-size: 1em;
+            margin: 10px 0;
+        }
+        .input::placeholder { color: rgba(255,255,255,0.5); }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .stat-item .value { font-size: 1.5em; font-weight: bold; color: #ffd700; }
+        .stat-item .label { font-size: 0.8em; opacity: 0.7; }
+        .faucet-dist {
+            font-size: 0.8em;
+            opacity: 0.8;
+            margin-top: 10px;
+        }
+        .message {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.05);
+        }
+        .message.success { border-left: 4px solid #4CAF50; }
+        .message.error { border-left: 4px solid #ff6b6b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ Faucet Revolution</h1>
+            <p style="opacity: 0.8;">Gana crypto optimizado matemáticamente</p>
+        </div>
+        
+        <div class="card">
+            <h3>🔑 Tu Wallet</h3>
+            <input class="input" id="wallet" placeholder="Ingresa tu public key">
+            <button class="btn btn-secondary" onclick="register()">🚀 Registrar y obtener bono</button>
+        </div>
+        
+        <div class="card">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="value" id="balance">0.00</div>
+                    <div class="label">Balance (USD)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value" id="rate">0.00</div>
+                    <div class="label">Tasa actual (USD/h)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="value" id="streak">0</div>
+                    <div class="label">Racha 🔥</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>🎯 Acciones</h3>
+            <div class="grid-2">
+                <button class="btn" onclick="doAction('photo_upload', 'Subir foto')">📸 Subir Foto</button>
+                <button class="btn" onclick="doAction('photo_download', 'Descargar')">⬇️ Descargar</button>
+                <button class="btn" onclick="doAction('review', 'Dejar reseña')">⭐ Reseña</button>
+                <button class="btn" onclick="doAction('share', 'Compartir')">🔄 Compartir</button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3>💸 Retiros</h3>
+            <div id="withdrawInfo" style="margin: 10px 0;">
+                Mínimo: $1.00 | Max diario: $50.00
+            </div>
+            <button class="btn btn-withdraw" onclick="withdraw()">💰 Retirar todo</button>
+        </div>
+        
+        <div class="card" id="statsCard">
+            <h3>📊 Estadísticas en tiempo real</h3>
+            <div id="statsContent">
+                <div class="faucet-dist">Cargando datos...</div>
+            </div>
+        </div>
+        
+        <div id="message" class="message"></div>
+    </div>
+    
+    <script>
+        const API_URL = 'https://tu-api.glitch.me'; // Cambia por tu URL
+        let publicKey = '';
+        let updateInterval;
+        
+        async function register() {
+            publicKey = document.getElementById('wallet').value;
+            if (!publicKey) return showMessage('Ingresa tu wallet', 'error');
+            
+            try {
+                const res = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ publicKey })
+                });
+                const data = await res.json();
+                showMessage(data.message, 'success');
+                updateStats();
+            } catch (e) {
+                showMessage('Error al registrar', 'error');
+            }
+        }
+        
+        async function doAction(action, description) {
+            if (!publicKey) return showMessage('Regístrate primero', 'error');
+            
+            try {
+                const res = await fetch(`${API_URL}/action`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ 
+                        publicKey, 
+                        action,
+                        metadata: { description }
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    updateStats();
+                } else {
+                    showMessage('Error: ' + data.error, 'error');
+                }
+            } catch (e) {
+                showMessage('Error de red', 'error');
+            }
+        }
+        
+        async function withdraw() {
+            if (!publicKey) return showMessage('Regístrate primero', 'error');
+            
+            try {
+                const res = await fetch(`${API_URL}/withdraw`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ publicKey })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    updateStats();
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            } catch (e) {
+                showMessage('Error al retirar', 'error');
+            }
+        }
+        
+        async function updateStats() {
+            if (!publicKey) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/stats/${publicKey}`);
+                const data = await res.json();
+                
+                document.getElementById('balance').textContent = data.balance.toFixed(4);
+                document.getElementById('rate').textContent = data.estimatedHourly.toFixed(2);
+                document.getElementById('streak').textContent = data.streak || 0;
+                
+                // Estadísticas detalladas
+                const statsHTML = `
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:0.9em;">
+                        <div>📸 Fotos: ${data.totalPhotos || 0}</div>
+                        <div>⭐ Reseñas: ${data.totalReviews || 0}</div>
+                        <div>💰 Ganancias totales: $${data.lifetimeEarnings.toFixed(4)}</div>
+                        <div>🎯 Próximo retiro: $${data.nextWithdraw > 0 ? data.nextWithdraw.toFixed(4) : '¡LISTO!'}</div>
+                    </div>
+                    <div class="faucet-dist" style="margin-top:15px;font-size:0.7em;word-break:break-all;">
+                        Distribución: ${JSON.stringify(data.faucetDistribution || {}, null, 2)}
+                    </div>
+                `;
+                document.getElementById('statsContent').innerHTML = statsHTML;
+                
+            } catch (e) {
+                console.error('Error al actualizar stats', e);
+            }
+        }
+        
+        function showMessage(text, type = 'info') {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => {
+                msg.textContent = '';
+                msg.className = 'message';
+            }, 5000);
+        }
+        
+        // Actualizar cada 5 segundos
+        setInterval(updateStats, 5000);
+    </script>
+</body>
+</html>
