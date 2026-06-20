@@ -1,13 +1,17 @@
 {
   "name": "faucet-revolution",
-  "version": "1.0.0",
-  "description": "Plataforma faucet optimizada",
+  "version": "3.0.0",
+  "description": "Faucet Revolution con Wallet Connect",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "cors": "^2.8.5"
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
   }
 }
