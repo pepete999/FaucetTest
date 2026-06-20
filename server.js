@@ -17,11 +17,9 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ========== FUNCIÓN PARA LLAMAR A FAUCETPAY API ==========
+// ========== FUNCIÓN FAUCETPAY ==========
 async function faucetPayRequest(endpoint, params = {}) {
-    const url = new URL(`${FAUCETPAY_API_URL}/${endpoint}`);
     const formData = new URLSearchParams();
-    
     formData.append('api_key', FAUCETPAY_API_KEY);
     
     for (const [key, value] of Object.entries(params)) {
@@ -29,18 +27,16 @@ async function faucetPayRequest(endpoint, params = {}) {
     }
     
     try {
-        const response = await fetch(url, {
+        const response = await fetch(`${FAUCETPAY_API_URL}/${endpoint}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
             },
             body: formData.toString()
         });
-        
-        const data = await response.json();
-        return data;
+        return await response.json();
     } catch (error) {
-        console.error('Error en FaucetPay API:', error.message);
+        console.error('Error en FaucetPay:', error.message);
         return { status: 'error', message: error.message };
     }
 }
@@ -63,31 +59,12 @@ function saveDB(data) {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
-// ========== FUNCIONES DE FAUCETPAY ==========
-
+// ========== FUNCIONES FAUCETPAY ==========
 async function checkAddress(address, currency = FAUCETPAY_CURRENCY) {
     if (!FAUCETPAY_API_KEY) {
         return { status: 'success', valid: true, simulated: true };
     }
-    
-    const result = await faucetPayRequest('checkaddress', {
-        address: address,
-        currency: currency
-    });
-    
-    return result;
-}
-
-async function getBalance(currency = FAUCETPAY_CURRENCY) {
-    if (!FAUCETPAY_API_KEY) {
-        return { status: 'success', balance: 100, simulated: true };
-    }
-    
-    const result = await faucetPayRequest('balance', {
-        currency: currency
-    });
-    
-    return result;
+    return await faucetPayRequest('checkaddress', { address, currency });
 }
 
 async function sendPayment(address, amount, currency = FAUCETPAY_CURRENCY) {
@@ -96,17 +73,10 @@ async function sendPayment(address, amount, currency = FAUCETPAY_CURRENCY) {
             status: 'success',
             simulated: true,
             txid: `sim_${Date.now()}`,
-            message: `Simulación: ${amount} ${currency} enviado`
+            message: `Simulación: ${amount} ${currency}`
         };
     }
-    
-    const result = await faucetPayRequest('send', {
-        address: address,
-        amount: amount,
-        currency: currency
-    });
-    
-    return result;
+    return await faucetPayRequest('send', { address, amount, currency });
 }
 
 // ========== ENDPOINTS ==========
@@ -138,8 +108,7 @@ app.post('/register', (req, res) => {
         res.json({ 
             success: true, 
             message: '✅ Registrado con bono de $0.05',
-            balance: 0.05,
-            faucetEnabled: !!FAUCETPAY_API_KEY
+            balance: 0.05
         });
     } else {
         res.json({ 
@@ -169,8 +138,7 @@ app.post('/action', (req, res) => {
         'photo_upload': 0.003,
         'photo_download': 0.0015,
         'review': 0.002,
-        'share': 0.001,
-        'daily_bonus': 0.005
+        'share': 0.001
     };
     
     const earned = earnings[action] || 0.001;
@@ -193,13 +161,10 @@ app.post('/action', (req, res) => {
     
     saveDB(db);
     
-    const hourlyRate = earned * 3600 / 5;
-    
     res.json({
         success: true,
         earned: earned,
         balance: user.balance,
-        hourlyRate: hourlyRate,
         message: `✅ Ganaste $${earned.toFixed(4)}`
     });
 });
@@ -214,20 +179,16 @@ app.get('/stats/:publicKey', (req, res) => {
     }
     
     res.json({
-        publicKey: req.params.publicKey,
         balance: user.balance,
-        lifetimeEarnings: user.lifetimeEarnings,
         totalPhotos: user.totalPhotos || 0,
         totalReviews: user.totalReviews || 0,
         totalDownloads: user.totalDownloads || 0,
         streak: user.streak || 0,
-        estimatedHourly: Math.min(user.balance * 2, 20),
-        faucetEnabled: !!FAUCETPAY_API_KEY,
-        currency: FAUCETPAY_CURRENCY
+        estimatedHourly: Math.min(user.balance * 2, 20)
     });
 });
 
-// 💰 RETIRO
+// 💰 Retiro
 app.post('/withdraw', async (req, res) => {
     const { publicKey, currency } = req.body;
     
@@ -252,24 +213,20 @@ app.post('/withdraw', async (req, res) => {
     const currencyToUse = currency || FAUCETPAY_CURRENCY || 'SOL';
     const amountUSD = user.balance;
     
-    const conversionRates = {
+    const rates = {
         'SOL': 0.007,
         'BTC': 0.000015,
         'ETH': 0.0004,
-        'LTC': 0.012,
-        'DOGE': 6.5,
-        'USDC': 1.0,
-        'TRX': 8.5,
-        'BNB': 0.0025
+        'USDC': 1.0
     };
     
-    const rate = conversionRates[currencyToUse] || 0.007;
+    const rate = rates[currencyToUse] || 0.007;
     const amountCrypto = Math.round((amountUSD * rate) * 100000000) / 100000000;
     
     if (amountCrypto < 0.00000001) {
         return res.json({
             success: false,
-            message: '❌ El monto es demasiado pequeño para retirar'
+            message: '❌ El monto es demasiado pequeño'
         });
     }
     
@@ -283,11 +240,7 @@ app.post('/withdraw', async (req, res) => {
             });
         }
         
-        const paymentResult = await sendPayment(
-            publicKey,
-            amountCrypto,
-            currencyToUse
-        );
+        const paymentResult = await sendPayment(publicKey, amountCrypto, currencyToUse);
         
         if (paymentResult.status === 'success' || paymentResult.simulated) {
             user.balance = 0;
@@ -310,7 +263,6 @@ app.post('/withdraw', async (req, res) => {
                 action: 'withdraw',
                 currency: currencyToUse,
                 txid: paymentResult.txid || 'pending',
-                simulated: paymentResult.simulated || false,
                 timestamp: Date.now()
             });
             
@@ -328,35 +280,17 @@ app.post('/withdraw', async (req, res) => {
         } else {
             res.json({
                 success: false,
-                message: '❌ Error al procesar el pago: ' + (paymentResult.message || 'Error desconocido')
+                message: '❌ Error al procesar el pago'
             });
         }
         
     } catch (error) {
-        console.error('❌ Error en retiro:', error);
+        console.error('Error en retiro:', error);
         res.status(500).json({
             success: false,
             message: '❌ Error al procesar el retiro: ' + error.message
         });
     }
-});
-
-// 🏦 Balance de FaucetPay
-app.get('/faucet-balance', async (req, res) => {
-    const currency = req.query.currency || FAUCETPAY_CURRENCY;
-    const result = await getBalance(currency);
-    res.json(result);
-});
-
-// 📜 Transacciones
-app.get('/transactions/:publicKey', (req, res) => {
-    const db = getDB();
-    const txs = db.transactions.filter(t => t.publicKey === req.params.publicKey);
-    res.json({
-        publicKey: req.params.publicKey,
-        count: txs.length,
-        transactions: txs.slice(-30)
-    });
 });
 
 // 🏓 Ping
@@ -365,29 +299,22 @@ app.get('/ping', (req, res) => {
         status: 'ok',
         timestamp: Date.now(),
         faucetEnabled: !!FAUCETPAY_API_KEY,
-        currency: FAUCETPAY_CURRENCY,
-        message: 'Servidor funcionando correctamente'
+        currency: FAUCETPAY_CURRENCY
     });
 });
 
-// 🔥 RUTA PRINCIPAL
+// 🔥 Ruta principal
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ========== INICIAR SERVIDOR ==========
 app.listen(PORT, () => {
-    console.log(`\n🚀 Faucet Revolution - Wallet Connect`);
-    console.log(`📍 http://localhost:${PORT}`);
+    console.log(`\n🚀 Servidor corriendo en puerto ${PORT}`);
     console.log(`💰 FaucetPay: ${FAUCETPAY_API_KEY ? '✅ ACTIVADO' : '⚠️ SIMULACIÓN'}`);
-    console.log(`💱 Moneda: ${FAUCETPAY_CURRENCY}`);
-    console.log(`\n✅ Servidor listo\n`);
 });
 
-// ========== MANEJO DE ERRORES 404 ==========
+// Manejo de errores 404
 app.use((req, res) => {
-    res.status(404).json({ 
-        error: 'Ruta no encontrada',
-        path: req.path
-    });
+    res.status(404).json({ error: 'Ruta no encontrada', path: req.path });
 });
