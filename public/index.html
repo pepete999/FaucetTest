@@ -2,112 +2,152 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>💰 Faucet Revolution - Solana</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>💰 Faucet Revolution</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0a1a, #1a1a2e, #16213e);
             color: white;
-            padding: 20px;
+            padding: 16px;
             min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
         }
         .container {
-            max-width: 500px;
+            max-width: 480px;
             width: 100%;
             background: rgba(255,255,255,0.05);
-            padding: 25px;
-            border-radius: 20px;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
         }
         h1 {
             text-align: center;
-            background: linear-gradient(45deg, #9945FF, #14F195);
+            font-size: 1.8em;
+            background: linear-gradient(45deg, #f7931a, #ff6b6b);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            font-size: 2em;
+            margin-bottom: 8px;
         }
         .subtitle {
             text-align: center;
-            opacity: 0.6;
+            opacity: 0.5;
+            font-size: 0.85em;
             margin-bottom: 20px;
+        }
+        .wallet-connect {
+            background: linear-gradient(135deg, #9945FF, #14F195);
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: 16px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin: 6px 0;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .wallet-connect:hover { transform: scale(1.02); }
+        .wallet-connect:active { transform: scale(0.98); }
+        .wallet-connect .icon { font-size: 1.4em; }
+        .wallet-connected {
+            background: rgba(20, 241, 149, 0.15);
+            border: 1px solid #14F195;
+            border-radius: 16px;
+            padding: 12px 16px;
+            margin: 10px 0;
+            font-size: 0.85em;
+            word-break: break-all;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .wallet-connected .address {
+            color: #14F195;
+            font-family: monospace;
             font-size: 0.9em;
         }
-        input, select, button {
+        .wallet-connected .disconnect {
+            color: #ff6b6b;
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 4px 8px;
+        }
+        input, button {
             width: 100%;
             padding: 14px;
             margin: 6px 0;
             border: none;
-            border-radius: 10px;
+            border-radius: 14px;
             font-size: 16px;
         }
-        input, select {
-            background: rgba(255,255,255,0.1);
+        input {
+            background: rgba(255,255,255,0.08);
             color: white;
             border: 1px solid rgba(255,255,255,0.1);
         }
-        input::placeholder { color: rgba(255,255,255,0.5); }
-        select option { background: #1a1a2e; color: white; }
+        input::placeholder { color: rgba(255,255,255,0.4); }
+        input:focus { outline: 2px solid #9945FF; }
         button {
-            background: linear-gradient(45deg, #9945FF, #14F195);
+            background: linear-gradient(45deg, #f7931a, #ff6b6b);
             color: white;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
+            border-radius: 14px;
         }
-        button:hover { transform: scale(1.02); box-shadow: 0 5px 20px rgba(153, 69, 255, 0.3); }
+        button:hover { transform: scale(1.02); }
+        button:active { transform: scale(0.98); }
         button.secondary { background: linear-gradient(45deg, #4CAF50, #45a049); }
-        button.withdraw { 
-            background: linear-gradient(45deg, #9945FF, #14F195);
-            font-size: 1.1em;
-            padding: 16px;
-        }
-        button.phantom {
-            background: linear-gradient(45deg, #534BB1, #9945FF);
-            margin-bottom: 10px;
-        }
-        button.danger { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
+        button.withdraw { background: linear-gradient(45deg, #9945FF, #14F195); }
         .balance {
             font-size: 2.5em;
             text-align: center;
-            color: #14F195;
-            margin: 15px 0;
-            text-shadow: 0 0 30px rgba(20, 241, 149, 0.3);
+            color: #4CAF50;
+            margin: 12px 0;
+            text-shadow: 0 0 30px rgba(76,175,80,0.2);
         }
-        .balance-sol {
-            font-size: 1.2em;
+        .balance-sub {
             text-align: center;
-            color: #9945FF;
-            margin: 5px 0;
+            font-size: 0.9em;
+            opacity: 0.5;
+            margin-bottom: 10px;
         }
         .stats {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
-            margin: 15px 0;
+            margin: 12px 0;
         }
         .stat {
             background: rgba(255,255,255,0.05);
             padding: 10px;
-            border-radius: 10px;
+            border-radius: 12px;
             text-align: center;
         }
-        .stat .value { font-size: 1.3em; font-weight: bold; color: #ffd700; }
-        .stat .label { font-size: 0.7em; opacity: 0.7; }
+        .stat .value { font-size: 1.2em; font-weight: bold; color: #ffd700; }
+        .stat .label { font-size: 0.65em; opacity: 0.6; margin-top: 2px; }
         .message {
             padding: 12px;
-            border-radius: 10px;
+            border-radius: 12px;
             margin: 10px 0;
             background: rgba(255,255,255,0.05);
-            min-height: 50px;
+            min-height: 44px;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
         }
-        .message.success { border-left: 4px solid #14F195; }
+        .message.success { border-left: 4px solid #4CAF50; }
         .message.error { border-left: 4px solid #ff6b6b; }
         .message.info { border-left: 4px solid #9945FF; }
         .grid-2 {
@@ -115,47 +155,49 @@
             grid-template-columns: 1fr 1fr;
             gap: 6px;
         }
-        .grid-2 button { font-size: 13px; padding: 10px; }
-        .status {
-            text-align: center;
-            font-size: 0.8em;
-            opacity: 0.5;
-            margin-top: 15px;
+        .grid-2 button { font-size: 13px; padding: 12px; }
+        .currency-select {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin: 10px 0;
         }
-        .deploy-info {
+        .currency-select button {
+            padding: 10px;
+            font-size: 12px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 10px;
+        }
+        .currency-select button.active {
+            background: linear-gradient(45deg, #f7931a, #ff6b6b);
+            border-color: #f7931a;
+        }
+        .status-bar {
             text-align: center;
             font-size: 0.7em;
             opacity: 0.3;
-            margin-top: 10px;
+            margin-top: 12px;
         }
-        .wallet-info {
-            background: rgba(153, 69, 255, 0.1);
-            padding: 10px;
-            border-radius: 10px;
-            margin: 10px 0;
-            font-size: 0.8em;
-            word-break: break-all;
-            border: 1px solid rgba(153, 69, 255, 0.2);
-        }
-        .network-badge {
-            display: inline-block;
-            padding: 3px 10px;
+        .badge {
+            text-align: center;
+            padding: 6px 12px;
             border-radius: 20px;
             font-size: 0.7em;
-            font-weight: bold;
-            margin: 5px 0;
+            margin: 8px auto;
+            display: inline-block;
+            width: auto;
         }
-        .network-mainnet { background: #14F195; color: #1a1a2e; }
-        .network-devnet { background: #9945FF; color: white; }
-        .network-testnet { background: #ff6b6b; color: white; }
+        .badge-on { background: rgba(76,175,80,0.2); border: 1px solid #4CAF50; color: #4CAF50; }
+        .badge-off { background: rgba(255,107,107,0.2); border: 1px solid #ff6b6b; color: #ff6b6b; }
         .loader {
             border: 3px solid rgba(255,255,255,0.1);
             border-top: 3px solid #9945FF;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 1s linear infinite;
-            margin: 10px auto;
+            width: 28px;
+            height: 28px;
+            animation: spin 0.8s linear infinite;
+            margin: 8px auto;
             display: none;
         }
         @keyframes spin {
@@ -167,33 +209,31 @@
             text-decoration: none;
             word-break: break-all;
         }
-        .tx-link:hover { text-decoration: underline; }
+        .flex-center { display: flex; align-items: center; justify-content: center; gap: 8px; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>⚡ Faucet Revolution</h1>
-        <p class="subtitle">Gana crypto en Solana con matemáticas optimizadas</p>
+        <p class="subtitle">Gana crypto con Wallet Connect</p>
         
-        <!-- Conexión Phantom -->
-        <button class="phantom" onclick="connectPhantom()">🟣 Conectar Phantom Wallet</button>
-        <div id="walletInfo" class="wallet-info" style="display:none;">
-            <strong>💰 Wallet:</strong> <span id="phantomAddress">Cargando...</span><br>
-            <strong>🪙 Saldo SOL:</strong> <span id="phantomBalance">0.00</span> SOL
+        <!-- Wallet Connect -->
+        <button class="wallet-connect" id="connectBtn" onclick="connectWallet()">
+            <span class="icon">🟣</span> Conectar Wallet
+        </button>
+        
+        <div id="walletInfo" style="display:none;" class="wallet-connected">
+            <span>🟢 <span class="address" id="walletAddress">Cargando...</span></span>
+            <span class="disconnect" onclick="disconnectWallet()">✕</span>
         </div>
         
-        <!-- Selección de Red -->
-        <select id="networkSelect">
-            <option value="mainnet">🌐 Mainnet (Beta)</option>
-            <option value="devnet">🧪 Devnet (Pruebas)</option>
-            <option value="testnet">🔬 Testnet</option>
-        </select>
+        <div id="statusBadge" class="badge badge-off" style="text-align:center;display:block;">⏳ Cargando...</div>
         
-        <input id="wallet" placeholder="🔑 Ingresa tu Public Key de Solana">
+        <input id="wallet" placeholder="🔑 O ingresa tu dirección manualmente">
         <button class="secondary" onclick="register()">🚀 Registrar</button>
         
         <div class="balance" id="balance">$0.0000</div>
-        <div class="balance-sol" id="balanceSol">◎ 0.0000 SOL</div>
+        <div class="balance-sub" id="balanceCrypto">🪙 0.0000 SOL</div>
         
         <div class="stats">
             <div class="stat">
@@ -211,128 +251,162 @@
         </div>
         
         <div class="grid-2">
-            <button onclick="doAction('photo_upload')">📸 Subir foto</button>
+            <button onclick="doAction('photo_upload')">📸 Subir</button>
             <button onclick="doAction('photo_download')">⬇️ Descargar</button>
             <button onclick="doAction('review')">⭐ Reseña</button>
             <button onclick="doAction('share')">🔄 Compartir</button>
         </div>
         
-        <button class="withdraw" onclick="withdrawSolana()">💰 Retirar a Solana (mínimo $1)</button>
+        <div style="text-align:center;font-size:0.75em;opacity:0.5;margin:10px 0;">Moneda para retirar:</div>
+        <div class="currency-select">
+            <button class="active" onclick="selectCurrency('SOL')">◎ SOL</button>
+            <button onclick="selectCurrency('BTC')">₿ BTC</button>
+            <button onclick="selectCurrency('ETH')">⟠ ETH</button>
+            <button onclick="selectCurrency('USDC')">💵 USDC</button>
+        </div>
+        
+        <button class="withdraw" onclick="withdraw()">💰 Retirar (mínimo $1)</button>
         
         <div id="loader" class="loader"></div>
-        <div id="message" class="message">💡 Conecta tu wallet y regístrate</div>
+        <div id="message" class="message">💡 Conecta tu wallet o regístrate</div>
         
-        <div class="status">🔄 Actualizado en tiempo real | v3.0 - Solana</div>
-        <div class="deploy-info" id="deployInfo">Cargando...</div>
+        <div class="status-bar">🔄 Actualizado cada 3s | v3.0</div>
     </div>
     
-    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
     <script>
         // ========== CONFIGURACIÓN ==========
-        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-            ? `http://localhost:${window.location.port || 3000}`
-            : window.location.origin;
-        
+        const API_URL = window.location.origin;
         let publicKey = '';
-        let phantomWallet = null;
-        let solanaConnection = null;
-        let currentNetwork = 'mainnet';
+        let selectedCurrency = 'SOL';
+        let walletConnected = false;
         
-        console.log('📡 API URL:', API_URL);
-        document.getElementById('deployInfo').textContent = `🌐 Servidor: ${API_URL}`;
+        // ========== WALLET CONNECT (MULTI-WALLET) ==========
+        function connectWallet() {
+            // Detectar si es móvil
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            // Lista de wallets compatibles
+            const wallets = [
+                { name: 'Phantom', url: 'https://phantom.app/ul/browse/' },
+                { name: 'Solflare', url: 'https://solflare.com/ul/' },
+                { name: 'Trust Wallet', url: 'https://link.trustwallet.com/' },
+                { name: 'Coinbase Wallet', url: 'https://wallet.coinbase.com/' },
+                { name: 'MetaMask', url: 'https://metamask.app.link/dapp/' }
+            ];
+            
+            // Si es móvil, mostrar botón para elegir wallet
+            if (isMobile) {
+                showWalletSelection(wallets);
+                return;
+            }
+            
+            // En desktop, intentar conectar con Phantom (si está instalado)
+            if (window.solana && window.solana.isPhantom) {
+                connectPhantom();
+                return;
+            }
+            
+            // Si no hay wallet detectada, mostrar opciones
+            showWalletSelection(wallets);
+        }
         
-        // ========== REDES SOLANA ==========
-        const NETWORKS = {
-            mainnet: 'https://api.mainnet-beta.solana.com',
-            devnet: 'https://api.devnet.solana.com',
-            testnet: 'https://api.testnet.solana.com'
-        };
+        function showWalletSelection(wallets) {
+            const msg = document.getElementById('message');
+            let html = '📱 Elige tu wallet:<br><br>';
+            wallets.forEach(w => {
+                html += `<button onclick="openWallet('${w.url}')" style="margin:4px;padding:10px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:white;cursor:pointer;font-size:14px;">
+                    ${w.name}
+                </button>`;
+            });
+            html += `<br><br><span style="font-size:0.8em;opacity:0.5;">O ingresa tu dirección manualmente abajo</span>`;
+            msg.innerHTML = html;
+            msg.className = 'message info';
+        }
         
-        // ========== CONECTAR PHANTOM ==========
+        function openWallet(url) {
+            // Construir URL con la app actual
+            const currentUrl = window.location.href;
+            const encodedUrl = encodeURIComponent(currentUrl);
+            window.open(url + encodedUrl, '_blank');
+            showMessage('📱 Abriendo wallet... Después de conectar, vuelve a la app', 'info');
+        }
+        
+        // ========== CONECTAR PHANTOM (Desktop) ==========
         async function connectPhantom() {
             try {
                 if (!window.solana || !window.solana.isPhantom) {
-                    showMessage('🟣 Instala Phantom Wallet: https://phantom.app/', 'error');
+                    showMessage('🟣 Instala Phantom: https://phantom.app/', 'error');
                     window.open('https://phantom.app/', '_blank');
                     return;
                 }
                 
                 const response = await window.solana.connect();
-                phantomWallet = response.publicKey.toString();
-                document.getElementById('phantomAddress').textContent = phantomWallet;
-                document.getElementById('walletInfo').style.display = 'block';
-                document.getElementById('wallet').value = phantomWallet;
-                publicKey = phantomWallet;
+                publicKey = response.publicKey.toString();
+                walletConnected = true;
                 
-                showMessage('✅ Wallet conectada: ' + phantomWallet.slice(0, 6) + '...' + phantomWallet.slice(-4), 'success');
-                localStorage.setItem('faucetWallet', phantomWallet);
+                document.getElementById('walletAddress').textContent = publicKey.slice(0, 6) + '...' + publicKey.slice(-4);
+                document.getElementById('walletInfo').style.display = 'flex';
+                document.getElementById('connectBtn').textContent = '🟢 Conectado';
+                document.getElementById('wallet').value = publicKey;
                 
-                // Obtener saldo SOL
-                await getSolanaBalance();
+                localStorage.setItem('faucetWallet', publicKey);
+                showMessage('✅ Wallet conectada: ' + publicKey.slice(0, 8) + '...', 'success');
                 
-                // Registrar automáticamente
                 await register();
                 
             } catch (error) {
-                console.error('Error conectando Phantom:', error);
+                console.error('Error:', error);
                 showMessage('❌ Error al conectar: ' + error.message, 'error');
             }
         }
         
-        // ========== OBTENER SALDO SOL ==========
-        async function getSolanaBalance() {
-            if (!phantomWallet) return;
-            
-            try {
-                const network = document.getElementById('networkSelect').value;
-                const connection = new solanaWeb3.Connection(NETWORKS[network]);
-                const publicKeyObj = new solanaWeb3.PublicKey(phantomWallet);
-                const balance = await connection.getBalance(publicKeyObj);
-                const solBalance = balance / solanaWeb3.LAMPORTS_PER_SOL;
-                
-                document.getElementById('phantomBalance').textContent = solBalance.toFixed(4);
-                currentNetwork = network;
-                
-                return solBalance;
-            } catch (error) {
-                console.error('Error obteniendo saldo:', error);
-                return 0;
-            }
+        // ========== DESCONECTAR ==========
+        function disconnectWallet() {
+            walletConnected = false;
+            publicKey = '';
+            document.getElementById('walletInfo').style.display = 'none';
+            document.getElementById('connectBtn').textContent = '🟣 Conectar Wallet';
+            localStorage.removeItem('faucetWallet');
+            showMessage('👋 Wallet desconectada', 'info');
+        }
+        
+        // ========== SELECCIONAR MONEDA ==========
+        function selectCurrency(currency) {
+            selectedCurrency = currency;
+            document.querySelectorAll('.currency-select button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(currency)) btn.classList.add('active');
+            });
+            updateStats();
         }
         
         // ========== REGISTRO ==========
         async function register() {
             publicKey = document.getElementById('wallet').value.trim();
-            if (!publicKey) return showMessage('Ingresa tu wallet o conecta Phantom', 'error');
-            
-            // Validar que es una dirección de Solana válida
-            try {
-                new solanaWeb3.PublicKey(publicKey);
-            } catch (e) {
-                return showMessage('❌ Dirección de Solana inválida', 'error');
-            }
+            if (!publicKey) return showMessage('Ingresa tu wallet o conecta una', 'error');
             
             try {
                 const res = await fetch(`${API_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey, network: currentNetwork })
+                    body: JSON.stringify({ publicKey })
                 });
                 const data = await res.json();
                 showMessage(data.message, data.success ? 'success' : 'error');
                 if (data.success) {
                     localStorage.setItem('faucetWallet', publicKey);
                     updateStats();
+                    checkStatus();
                 }
             } catch (e) {
-                showMessage('❌ Error de conexión al servidor', 'error');
+                showMessage('❌ Error de conexión', 'error');
                 console.error(e);
             }
         }
         
         // ========== ACCIONES ==========
         async function doAction(action) {
-            if (!publicKey) return showMessage('Regístrate o conecta wallet primero', 'error');
+            if (!publicKey) return showMessage('Regístrate o conecta wallet', 'error');
             
             try {
                 const res = await fetch(`${API_URL}/action`, {
@@ -353,88 +427,65 @@
             }
         }
         
-        // ========== RETIRO EN SOLANA ==========
-        async function withdrawSolana() {
-            if (!publicKey) return showMessage('Regístrate o conecta wallet primero', 'error');
-            
-            // Verificar que Phantom está conectado
-            if (!window.solana || !window.solana.isPhantom) {
-                return showMessage('🟣 Conecta Phantom Wallet para retirar', 'error');
-            }
+        // ========== RETIRO ==========
+        async function withdraw() {
+            if (!publicKey) return showMessage('Regístrate o conecta wallet', 'error');
             
             try {
-                // Obtener saldo en USD
                 const statsRes = await fetch(`${API_URL}/stats/${publicKey}`);
                 const stats = await statsRes.json();
                 
                 if (stats.balance < 1.0) {
-                    return showMessage(`❌ Saldo insuficiente. Necesitas $${(1.0 - stats.balance).toFixed(2)} más`, 'error');
+                    return showMessage(`❌ Necesitas $${(1.0 - stats.balance).toFixed(2)} más`, 'error');
                 }
                 
-                showMessage('⏳ Procesando retiro en Solana...', 'info');
+                showMessage(`⏳ Procesando retiro en ${selectedCurrency}...`, 'info');
                 document.getElementById('loader').style.display = 'block';
                 
-                // 1. Obtener la transacción del backend
-                const withdrawRes = await fetch(`${API_URL}/withdraw-solana`, {
+                const res = await fetch(`${API_URL}/withdraw`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        publicKey, 
-                        amount: stats.balance,
-                        network: document.getElementById('networkSelect').value
-                    })
+                    body: JSON.stringify({ publicKey, currency: selectedCurrency })
                 });
                 
-                const withdrawData = await withdrawRes.json();
-                
-                if (!withdrawData.success) {
-                    showMessage('❌ ' + withdrawData.message, 'error');
-                    document.getElementById('loader').style.display = 'none';
-                    return;
-                }
-                
-                // 2. Firmar y enviar transacción con Phantom
-                if (withdrawData.transaction) {
-                    // Convertir transacción de base64 a buffer
-                    const transactionBuffer = Buffer.from(withdrawData.transaction, 'base64');
-                    const transaction = solanaWeb3.Transaction.from(transactionBuffer);
-                    
-                    // Firmar con Phantom
-                    const signed = await window.solana.signTransaction(transaction);
-                    
-                    // Enviar transacción
-                    const network = document.getElementById('networkSelect').value;
-                    const connection = new solanaWeb3.Connection(NETWORKS[network]);
-                    const signature = await connection.sendRawTransaction(signed.serialize());
-                    
-                    // Confirmar transacción
-                    const confirmation = await connection.confirmTransaction(signature, 'confirmed');
-                    
-                    if (confirmation.value.err) {
-                        throw new Error('Transacción falló en la red');
-                    }
-                    
-                    // Actualizar saldo
-                    await updateStats();
-                    
-                    showMessage(`✅ Retiro exitoso! TX: ${signature.slice(0, 8)}...${signature.slice(-8)}`, 'success');
-                    
-                    // Mostrar enlace al explorador
-                    const explorerUrl = `https://solscan.io/tx/${signature}${network !== 'mainnet' ? '?cluster=' + network : ''}`;
-                    document.getElementById('message').innerHTML = `
-                        ✅ Retiro exitoso! <br>
-                        <a href="${explorerUrl}" target="_blank" class="tx-link">🔗 Ver en Solscan</a>
-                    `;
-                    
-                } else {
-                    showMessage('❌ Error: No se pudo crear la transacción', 'error');
-                }
-                
-            } catch (error) {
-                console.error('Error en retiro:', error);
-                showMessage('❌ Error al retirar: ' + error.message, 'error');
-            } finally {
+                const data = await res.json();
                 document.getElementById('loader').style.display = 'none';
+                
+                if (data.success) {
+                    let msg = data.message;
+                    if (data.txid && !data.simulated) {
+                        msg += `<br>🔗 TX: ${data.txid}`;
+                    }
+                    if (data.simulated) {
+                        msg += '<br>⚠️ Modo simulación';
+                    }
+                    showMessage(msg, 'success');
+                    updateStats();
+                } else {
+                    showMessage(data.message || '❌ Error al retirar', 'error');
+                }
+            } catch (e) {
+                document.getElementById('loader').style.display = 'none';
+                showMessage('❌ Error: ' + e.message, 'error');
+                console.error(e);
+            }
+        }
+        
+        // ========== ESTADO ==========
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${API_URL}/ping`);
+                const data = await res.json();
+                const badge = document.getElementById('statusBadge');
+                if (data.faucetEnabled) {
+                    badge.className = 'badge badge-on';
+                    badge.textContent = `✅ FaucetPay: ${data.currency}`;
+                } else {
+                    badge.className = 'badge badge-off';
+                    badge.textContent = '⚠️ Modo simulación';
+                }
+            } catch (e) {
+                console.error('Error:', e);
             }
         }
         
@@ -445,101 +496,56 @@
             try {
                 const res = await fetch(`${API_URL}/stats/${publicKey}`);
                 if (!res.ok) {
-                    if (res.status === 404) {
-                        showMessage('⚠️ Usuario no encontrado, regístrate', 'error');
-                    }
+                    if (res.status === 404) showMessage('⚠️ Usuario no encontrado', 'error');
                     return;
                 }
                 const data = await res.json();
                 
                 document.getElementById('balance').textContent = `$${data.balance.toFixed(4)}`;
-                document.getElementById('balanceSol').textContent = `◎ ${(data.balance / 150).toFixed(4)} SOL`; // Asumiendo SOL a $150
+                
+                // Conversión a crypto
+                const rates = { 'SOL': 0.007, 'BTC': 0.000015, 'ETH': 0.0004, 'USDC': 1.0 };
+                const rate = rates[selectedCurrency] || 0.007;
+                const cryptoAmount = data.balance * rate;
+                document.getElementById('balanceCrypto').textContent = `🪙 ${cryptoAmount.toFixed(8)} ${selectedCurrency}`;
+                
                 document.getElementById('rate').textContent = data.estimatedHourly.toFixed(2);
                 document.getElementById('streak').textContent = data.streak || 0;
                 document.getElementById('photos').textContent = data.totalPhotos || 0;
-                
-                // Actualizar saldo de Phantom si está conectado
-                if (phantomWallet) {
-                    await getSolanaBalance();
-                }
-                
             } catch (e) {
-                console.error('Error al actualizar stats', e);
+                console.error('Error:', e);
             }
         }
         
         // ========== MOSTRAR MENSAJE ==========
         function showMessage(text, type = 'info') {
             const msg = document.getElementById('message');
-            if (type === 'info' && text.includes('http')) {
+            if (text.includes('http') || text.includes('<br>') || text.includes('<button')) {
                 msg.innerHTML = text;
             } else {
                 msg.textContent = text;
             }
             msg.className = `message ${type}`;
-            setTimeout(() => {
-                if (!text.includes('http')) {
-                    msg.textContent = '💡 Listo para continuar';
-                    msg.className = 'message';
-                }
-            }, 8000);
         }
         
-        // ========== EVENT LISTENERS ==========
-        // Cambio de red
-        document.getElementById('networkSelect').addEventListener('change', function() {
-            currentNetwork = this.value;
-            if (phantomWallet) {
-                getSolanaBalance();
-                showMessage(`🔄 Cambiado a ${this.value}`, 'info');
-            }
-        });
-        
-        // Escuchar cambios de cuenta en Phantom
+        // ========== ESCUCHAR WALLET (Phantom) ==========
         if (window.solana) {
             window.solana.on('accountChanged', function(publicKey) {
                 if (publicKey) {
-                    phantomWallet = publicKey.toString();
-                    document.getElementById('wallet').value = phantomWallet;
-                    publicKey = phantomWallet;
-                    localStorage.setItem('faucetWallet', phantomWallet);
-                    getSolanaBalance();
+                    publicKey = publicKey.toString();
+                    document.getElementById('wallet').value = publicKey;
+                    localStorage.setItem('faucetWallet', publicKey);
                     updateStats();
-                    showMessage('🔄 Cuenta cambiada: ' + phantomWallet.slice(0, 6) + '...', 'info');
+                    showMessage('🔄 Cuenta cambiada', 'info');
                 } else {
-                    // Desconectado
-                    phantomWallet = null;
-                    document.getElementById('walletInfo').style.display = 'none';
-                    showMessage('👋 Wallet desconectada', 'info');
+                    disconnectWallet();
                 }
             });
         }
         
         // ========== INICIALIZACIÓN ==========
-        // Cargar wallet guardada
         const savedWallet = localStorage.getItem('faucetWallet');
         if (savedWallet) {
             document.getElementById('wallet').value = savedWallet;
             publicKey = savedWallet;
-            // Intentar conectar automáticamente
-            if (window.solana && window.solana.isPhantom) {
-                window.solana.connect({ onlyIfTrusted: true }).then(response => {
-                    phantomWallet = response.publicKey.toString();
-                    document.getElementById('phantomAddress').textContent = phantomWallet;
-                    document.getElementById('walletInfo').style.display = 'block';
-                    getSolanaBalance();
-                }).catch(() => {
-                    console.log('Conexión automática falló');
-                });
-            }
             updateStats();
-        }
-        
-        // Actualizar cada 3 segundos
-        setInterval(updateStats, 3000);
-        
-        console.log('🚀 Faucet Revolution v3.0 - Solana');
-        console.log('🌐 Red por defecto: Mainnet');
-    </script>
-</body>
-</html>
