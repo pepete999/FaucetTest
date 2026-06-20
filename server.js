@@ -1,12 +1,41 @@
-// server.js - Versión Revolucionaria
+// server.js - Versión Revolucionaria MEJORADA
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const crypto = require('crypto');
+const path = require('path'); // <--- NUEVO: Para manejar rutas
 
 const app = express();
+
+// ========== MIDDLEWARE ==========
 app.use(cors());
 app.use(express.json());
+
+// 🔥 NUEVO: Servir archivos estáticos (HTML, CSS, JS)
+app.use(express.static('public'));
+
+// 🔥 NUEVO: Ruta raíz que sirve index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// 🔥 NUEVO: Ruta de prueba para verificar que el servidor funciona
+app.get('/ping', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        timestamp: Date.now(),
+        message: '🚀 Servidor funcionando correctamente',
+        endpoints: [
+            'POST /register',
+            'POST /action', 
+            'GET /stats/:publicKey',
+            'POST /withdraw',
+            'GET /transactions/:publicKey',
+            'POST /referral',
+            'GET /ping'
+        ]
+    });
+});
 
 // ========== CONFIGURACIÓN MATEMÁTICA ==========
 const CONFIG = {
@@ -21,19 +50,19 @@ const CONFIG = {
     
     // Multiplicadores por acción (basados en engagement)
     MULTIPLIERS: {
-        photo_upload: 1.5,      // +50% por foto única
-        photo_download: 0.3,    // +30% por descarga
-        review: 0.7,            // +70% por reseña
-        share: 0.4,             // +40% por compartir
-        daily_bonus: 2.0        // x2 por actividad diaria
+        photo_upload: 1.5,
+        photo_download: 0.3,
+        review: 0.7,
+        share: 0.4,
+        daily_bonus: 2.0
     },
     
     // Umbrales de rendimiento
     THRESHOLDS: {
-        min_withdraw: 1.0,      // USD
-        max_daily: 50.0,        // USD (anti-fraude)
-        optimal_session: 25,    // minutos
-        decay_factor: 0.98      // reducción por inactividad
+        min_withdraw: 1.0,
+        max_daily: 50.0,
+        optimal_session: 25,
+        decay_factor: 0.98
     }
 };
 
@@ -64,6 +93,7 @@ class Database {
                 performance: 1.0,
                 faucetCredits: {}
             };
+            db.stats.totalUsers++;
             this.saveDB(db);
         }
         return db.users[publicKey];
@@ -100,11 +130,9 @@ const db = new Database();
 
 // ========== ALGORITMO PNL OPTIMIZADO ==========
 class PNLOptimizer {
-    // Calcula el rendimiento óptimo basado en patrones históricos
     static calculateOptimalPerformance(user) {
-        const baseRate = 0.005; // $0.005 por tarea base
+        const baseRate = 0.005;
         
-        // Factores de rendimiento
         const engagementFactor = Math.min(
             (user.totalPhotos + user.totalReviews) / 100, 
             3.0
@@ -114,26 +142,23 @@ class PNLOptimizer {
         const timeFactor = this.getTimeBonus();
         const faucetEfficiency = this.calculateFaucetEfficiency(user);
         
-        // Fórmula mágica de rendimiento
         const performance = baseRate * 
                            engagementFactor * 
                            streakFactor * 
                            timeFactor * 
                            faucetEfficiency;
         
-        return Math.min(performance, 0.05); // Cap en $0.05 por tarea
+        return Math.min(performance, 0.05);
     }
     
     static getTimeBonus() {
         const hour = new Date().getHours();
-        // Horas pico (2-6 AM) tienen menos competencia en faucets
         if (hour >= 2 && hour <= 6) return 1.5;
         if (hour >= 12 && hour <= 14) return 1.3;
         return 1.0;
     }
     
     static calculateFaucetEfficiency(user) {
-        // Simula eficiencia basada en uso previo
         const credits = user.faucetCredits || {};
         let totalEfficiency = 0;
         let count = 0;
@@ -147,41 +172,33 @@ class PNLOptimizer {
     }
 }
 
-// ========== FAUCET ORCHESTRATOR (MULTI-API) ==========
+// ========== FAUCET ORCHESTRATOR ==========
 class FaucetOrchestrator {
     static async processTask(publicKey, taskType, metadata = {}) {
         const user = db.getUser(publicKey);
         
-        // 1. Calcular rendimiento óptimo
         const rate = PNLOptimizer.calculateOptimalPerformance(user);
-        
-        // 2. Aplicar multiplicador por tipo de tarea
         const multiplier = CONFIG.MULTIPLIERS[taskType] || 1.0;
         const earned = rate * multiplier;
         
-        // 3. Actualizar estadísticas
         user.balance += earned;
         user.lifetimeEarnings += earned;
         user.lastActivity = Date.now();
         user.streak = (user.streak || 0) + 1;
         
-        // 4. Actualizar contadores específicos
         if (taskType === 'photo_upload') user.totalPhotos++;
         if (taskType === 'photo_download') user.totalDownloads++;
         if (taskType === 'review') user.totalReviews++;
         
-        // 5. Distribuir entre faucets (evita sobrecarga)
         const faucetShare = earned / CONFIG.FAUCETS.length;
         CONFIG.FAUCETS.forEach(f => {
             if (!user.faucetCredits) user.faucetCredits = {};
             user.faucetCredits[f.name] = (user.faucetCredits[f.name] || 0) + faucetShare * f.weight;
         });
         
-        // 6. Guardar
         db.updateUser(publicKey, user);
         db.addTransaction(publicKey, earned, 'earn', `${taskType}: ${metadata.description || ''}`);
         
-        // 7. Verificar si hay retiro automático (algoritmo de umbral)
         if (user.balance >= CONFIG.THRESHOLDS.min_withdraw) {
             await this.autoWithdraw(publicKey);
         }
@@ -189,7 +206,7 @@ class FaucetOrchestrator {
         return {
             earned,
             balance: user.balance,
-            rate: rate * 3600, // Tasa por hora
+            rate: rate * 3600,
             performance: user.performance
         };
     }
@@ -199,7 +216,6 @@ class FaucetOrchestrator {
         const amount = Math.min(user.balance, CONFIG.THRESHOLDS.max_daily);
         
         if (amount >= CONFIG.THRESHOLDS.min_withdraw) {
-            // Simular envío a faucet
             user.balance -= amount;
             db.updateUser(publicKey, user);
             db.addTransaction(publicKey, amount, 'withdraw', 'Retiro automático optimizado');
@@ -220,9 +236,11 @@ class FaucetOrchestrator {
 // Registro con algoritmo de bienvenida
 app.post('/register', (req, res) => {
     const { publicKey } = req.body;
-    const user = db.getUser(publicKey);
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Public key requerida' });
+    }
     
-    // Bono de bienvenida optimizado
+    const user = db.getUser(publicKey);
     const welcomeBonus = 0.05 * (1 + Math.random() * 0.2);
     user.balance += welcomeBonus;
     db.updateUser(publicKey, user);
@@ -234,11 +252,13 @@ app.post('/register', (req, res) => {
     });
 });
 
-// Procesar acción (foto, reseña, descarga)
+// Procesar acción
 app.post('/action', async (req, res) => {
     const { publicKey, action, metadata } = req.body;
     
-    if (!publicKey) return res.status(400).json({ error: 'Public key requerida' });
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Public key requerida' });
+    }
     
     try {
         const result = await FaucetOrchestrator.processTask(publicKey, action, metadata);
@@ -252,47 +272,65 @@ app.post('/action', async (req, res) => {
     }
 });
 
-// Obtener estadísticas en tiempo real
+// Obtener estadísticas
 app.get('/stats/:publicKey', (req, res) => {
-    const user = db.getUser(req.params.publicKey);
-    const performance = PNLOptimizer.calculateOptimalPerformance(user);
-    
-    res.json({
-        publicKey: req.params.publicKey,
-        balance: user.balance,
-        lifetimeEarnings: user.lifetimeEarnings,
-        totalPhotos: user.totalPhotos,
-        totalReviews: user.totalReviews,
-        streak: user.streak,
-        currentRate: performance * 3600,
-        estimatedHourly: Math.min(performance * 3600 * 10, 20), // Cap 20 USD/hora
-        nextWithdraw: CONFIG.THRESHOLDS.min_withdraw - user.balance,
-        faucetDistribution: user.faucetCredits || {}
-    });
+    try {
+        const user = db.getUser(req.params.publicKey);
+        const performance = PNLOptimizer.calculateOptimalPerformance(user);
+        
+        res.json({
+            publicKey: req.params.publicKey,
+            balance: user.balance,
+            lifetimeEarnings: user.lifetimeEarnings,
+            totalPhotos: user.totalPhotos,
+            totalReviews: user.totalReviews,
+            streak: user.streak,
+            currentRate: performance * 3600,
+            estimatedHourly: Math.min(performance * 3600 * 10, 20),
+            nextWithdraw: CONFIG.THRESHOLDS.min_withdraw - user.balance,
+            faucetDistribution: user.faucetCredits || {}
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Retiro manual
 app.post('/withdraw', async (req, res) => {
     const { publicKey } = req.body;
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Public key requerida' });
+    }
+    
     const result = await FaucetOrchestrator.autoWithdraw(publicKey);
     res.json(result);
 });
 
-// Dashboard público de retiros
+// Dashboard de transacciones
 app.get('/transactions/:publicKey', (req, res) => {
-    const allData = db.getDB();
-    const txs = allData.transactions.filter(t => t.publicKey === req.params.publicKey);
-    res.json(txs);
+    try {
+        const allData = db.getDB();
+        const txs = allData.transactions.filter(t => t.publicKey === req.params.publicKey);
+        res.json({
+            publicKey: req.params.publicKey,
+            count: txs.length,
+            transactions: txs.slice(-20)
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
-// ========== SISTEMA DE BONOS POR REFERIDOS ==========
+// Sistema de referidos
 app.post('/referral', (req, res) => {
     const { referrer, newUser } = req.body;
     
-    // Bono matemático: 10% de las ganancias del referido por 30 días
-    const bonus = 0.10;
+    if (!referrer || !newUser) {
+        return res.status(400).json({ error: 'Referrer y newUser requeridos' });
+    }
+    
     const referrerUser = db.getUser(referrer);
-    referrerUser.balance += 0.05; // Bono inicial
+    referrerUser.balance += 0.05;
     db.updateUser(referrer, referrerUser);
     
     res.json({
@@ -301,9 +339,39 @@ app.post('/referral', (req, res) => {
     });
 });
 
+// 🔥 NUEVO: Dashboard global
+app.get('/dashboard', (req, res) => {
+    const dbData = db.getDB();
+    const users = Object.keys(dbData.users);
+    const totalWithdraws = dbData.transactions.filter(t => t.type === 'withdraw');
+    const totalEarned = dbData.transactions.filter(t => t.type === 'earn');
+    
+    res.json({
+        totalUsers: users.length,
+        totalTransactions: dbData.transactions.length,
+        totalWithdraws: totalWithdraws.length,
+        totalEarned: totalEarned.reduce((sum, t) => sum + t.amount, 0),
+        totalPaid: dbData.stats.totalPaid || 0,
+        lastTransactions: dbData.transactions.slice(-10)
+    });
+});
+
+// 🔥 NUEVO: Manejo de errores 404 (para rutas no encontradas)
+app.use((req, res) => {
+    res.status(404).json({ 
+        error: 'Ruta no encontrada',
+        path: req.path,
+        message: 'Verifica la URL o visita / para ver la aplicación'
+    });
+});
+
 // ========== INICIO ==========
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`🚀 Faucet Revolution Engine corriendo en puerto ${PORT}`);
-    console.log(`📊 Modelo PNL optimizado con ${CONFIG.FAUCETS.length} faucets`);
+    console.log(`\n🚀 Faucet Revolution Engine corriendo en:`);
+    console.log(`📍 http://localhost:${PORT}`);
+    console.log(`📱 App: http://localhost:${PORT}/`);
+    console.log(`📊 Dashboard: http://localhost:${PORT}/dashboard`);
+    console.log(`🏓 Ping: http://localhost:${PORT}/ping`);
+    console.log(`\n📊 Modelo PNL optimizado con ${CONFIG.FAUCETS.length} faucets\n`);
 });
