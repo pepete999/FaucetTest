@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💰 Faucet Revolution</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: white;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 500px;
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            padding: 25px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        h1 {
+            text-align: center;
+            background: linear-gradient(45deg, #f7931a, #ff6b6b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+        .subtitle {
+            text-align: center;
+            opacity: 0.6;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        input, button {
+            width: 100%;
+            padding: 14px;
+            margin: 6px 0;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+        input {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        input::placeholder { color: rgba(255,255,255,0.5); }
+        button {
+            background: linear-gradient(45deg, #f7931a, #ff6b6b);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        button:hover { transform: scale(1.02); }
+        button.secondary { background: linear-gradient(45deg, #4CAF50, #45a049); }
+        button.withdraw { background: linear-gradient(45deg, #ff6b6b, #ee5a24); }
+        .balance {
+            font-size: 2.5em;
+            text-align: center;
+            color: #4CAF50;
+            margin: 15px 0;
+            text-shadow: 0 0 30px rgba(76,175,80,0.3);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat .value { font-size: 1.3em; font-weight: bold; color: #ffd700; }
+        .stat .label { font-size: 0.7em; opacity: 0.7; }
+        .message {
+            padding: 12px;
+            border-radius: 10px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.05);
+            min-height: 50px;
+        }
+        .message.success { border-left: 4px solid #4CAF50; }
+        .message.error { border-left: 4px solid #ff6b6b; }
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        .grid-2 button { font-size: 13px; padding: 10px; }
+        .status {
+            text-align: center;
+            font-size: 0.8em;
+            opacity: 0.5;
+            margin-top: 15px;
+        }
+        .deploy-info {
+            text-align: center;
+            font-size: 0.7em;
+            opacity: 0.3;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Faucet Revolution</h1>
+        <p class="subtitle">Gana crypto con matemáticas optimizadas</p>
+        
+        <input id="wallet" placeholder="🔑 Ingresa tu Public Key">
+        <button class="secondary" onclick="register()">🚀 Registrar</button>
+        
+        <div class="balance" id="balance">$0.0000</div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="value" id="rate">0.00</div>
+                <div class="label">USD/hora</div>
+            </div>
+            <div class="stat">
+                <div class="value" id="streak">0</div>
+                <div class="label">Racha 🔥</div>
+            </div>
+            <div class="stat">
+                <div class="value" id="photos">0</div>
+                <div class="label">Fotos 📸</div>
+            </div>
+        </div>
+        
+        <div class="grid-2">
+            <button onclick="doAction('photo_upload')">📸 Subir foto</button>
+            <button onclick="doAction('photo_download')">⬇️ Descargar</button>
+            <button onclick="doAction('review')">⭐ Reseña</button>
+            <button onclick="doAction('share')">🔄 Compartir</button>
+        </div>
+        
+        <button class="withdraw" onclick="withdraw()">💰 Retirar (mínimo $1)</button>
+        
+        <div id="message" class="message">💡 Regístrate para comenzar</div>
+        
+        <div class="status">🔄 Actualizado en tiempo real | v2.0</div>
+        <div class="deploy-info" id="deployInfo">Cargando...</div>
+    </div>
+    
+    <script>
+        // Detección automática de URL (funciona local y en producción)
+        const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+            ? `http://localhost:${window.location.port || 3000}`
+            : window.location.origin;
+        
+        console.log('📡 API URL:', API_URL);
+        document.getElementById('deployInfo').textContent = `🌐 Servidor: ${API_URL}`;
+        
+        let publicKey = '';
+        
+        // Cargar wallet guardada
+        const savedWallet = localStorage.getItem('faucetWallet');
+        if (savedWallet) {
+            document.getElementById('wallet').value = savedWallet;
+            publicKey = savedWallet;
+            updateStats();
+        }
+        
+        async function register() {
+            publicKey = document.getElementById('wallet').value.trim();
+            if (!publicKey) return showMessage('Ingresa tu wallet', 'error');
+            
+            try {
+                const res = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey })
+                });
+                const data = await res.json();
+                showMessage(data.message, data.success ? 'success' : 'error');
+                if (data.success) {
+                    localStorage.setItem('faucetWallet', publicKey);
+                    updateStats();
+                }
+            } catch (e) {
+                showMessage('❌ Error de conexión al servidor', 'error');
+                console.error(e);
+            }
+        }
+        
+        async function doAction(action) {
+            if (!publicKey) return showMessage('Regístrate primero', 'error');
+            
+            try {
+                const res = await fetch(`${API_URL}/action`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey, action })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMessage(data.message, 'success');
+                    updateStats();
+                } else {
+                    showMessage(data.error || data.message || 'Error', 'error');
+                }
+            } catch (e) {
+                showMessage('❌ Error de conexión', 'error');
+                console.error(e);
+            }
+        }
+        
+        async function withdraw() {
+            if (!publicKey) return showMessage('Regístrate primero', 'error');
+            
+            try {
+                const res = await fetch(`${API_URL}/withdraw`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey })
+                });
+                const data = await res.json();
+                showMessage(data.message, data.success ? 'success' : 'error');
+                if (data.success) updateStats();
+            } catch (e) {
+                showMessage('❌ Error al retirar', 'error');
+                console.error(e);
+            }
+        }
+        
+        async function updateStats() {
+            if (!publicKey) return;
+            
+            try {
+                const res = await fetch(`${API_URL}/stats/${publicKey}`);
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        showMessage('⚠️ Usuario no encontrado, regístrate', 'error');
+                    }
+                    return;
+                }
+                const data = await res.json();
+                
+                document.getElementById('balance').textContent = `$${data.balance.toFixed(4)}`;
+                document.getElementById('rate').textContent = data.estimatedHourly.toFixed(2);
+                document.getElementById('streak').textContent = data.streak || 0;
+                document.getElementById('photos').textContent = data.totalPhotos || 0;
+            } catch (e) {
+                console.error('Error al actualizar stats', e);
+            }
+        }
+        
+        function showMessage(text, type = 'info') {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => {
+                msg.textContent = '💡 Listo para continuar';
+                msg.className = 'message';
+            }, 5000);
+        }
+        
+        // Actualizar cada 3 segundos
+        setInterval(updateStats, 3000);
+    </script>
+</body>
+</html>
