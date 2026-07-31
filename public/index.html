@@ -1,461 +1,460 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>💰 Faucet Revolution</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CryptoFaucet ARS & Minijuegos</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent: #38bdf8;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --purple: #a855f7;
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            background: linear-gradient(135deg, #0a0a1a, #1a1a2e, #16213e);
-            color: white;
-            padding: 16px;
-            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
         }
-        .container {
-            max-width: 480px;
+        .app-container {
             width: 100%;
-            background: rgba(255,255,255,0.05);
-            padding: 20px;
-            border-radius: 24px;
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255,255,255,0.08);
-        }
-        h1 {
-            text-align: center;
-            font-size: 1.8em;
-            background: linear-gradient(45deg, #f7931a, #ff6b6b);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 8px;
-        }
-        .subtitle {
-            text-align: center;
-            opacity: 0.5;
-            font-size: 0.85em;
-            margin-bottom: 20px;
-        }
-        .wallet-connect {
-            background: linear-gradient(135deg, #9945FF, #14F195);
-            border: none;
-            color: white;
-            padding: 16px;
-            border-radius: 16px;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin: 6px 0;
-            transition: all 0.3s;
-        }
-        .wallet-connect:hover { transform: scale(1.02); }
-        .wallet-connect:active { transform: scale(0.98); }
-        .wallet-connected {
-            background: rgba(20, 241, 149, 0.15);
-            border: 1px solid #14F195;
-            border-radius: 16px;
-            padding: 12px 16px;
-            margin: 10px 0;
-            font-size: 0.85em;
-            word-break: break-all;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .wallet-connected .address { color: #14F195; font-family: monospace; }
-        .wallet-connected .disconnect { color: #ff6b6b; cursor: pointer; font-size: 1.2em; }
-        input, button {
-            width: 100%;
-            padding: 14px;
-            margin: 6px 0;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-        }
-        input {
-            background: rgba(255,255,255,0.08);
-            color: white;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        input::placeholder { color: rgba(255,255,255,0.4); }
-        input:focus { outline: 2px solid #9945FF; }
-        button {
-            background: linear-gradient(45deg, #f7931a, #ff6b6b);
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s;
-            border-radius: 14px;
-        }
-        button:hover { transform: scale(1.02); }
-        button:active { transform: scale(0.98); }
-        button.secondary { background: linear-gradient(45deg, #4CAF50, #45a049); }
-        button.withdraw { background: linear-gradient(45deg, #9945FF, #14F195); }
-        .balance {
-            font-size: 2.5em;
-            text-align: center;
-            color: #4CAF50;
-            margin: 12px 0;
-        }
-        .balance-sub {
-            text-align: center;
-            font-size: 0.9em;
-            opacity: 0.5;
-            margin-bottom: 10px;
-        }
-        .stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin: 12px 0;
-        }
-        .stat {
-            background: rgba(255,255,255,0.05);
-            padding: 10px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        .stat .value { font-size: 1.2em; font-weight: bold; color: #ffd700; }
-        .stat .label { font-size: 0.65em; opacity: 0.6; margin-top: 2px; }
-        .message {
-            padding: 12px;
-            border-radius: 12px;
-            margin: 10px 0;
-            background: rgba(255,255,255,0.05);
-            min-height: 44px;
-            font-size: 0.9em;
-        }
-        .message.success { border-left: 4px solid #4CAF50; }
-        .message.error { border-left: 4px solid #ff6b6b; }
-        .message.info { border-left: 4px solid #9945FF; }
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-        }
-        .grid-2 button { font-size: 13px; padding: 12px; }
-        .currency-select {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 5px;
-            margin: 10px 0;
-        }
-        .currency-select button {
-            padding: 10px;
-            font-size: 12px;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 10px;
-        }
-        .currency-select button.active {
-            background: linear-gradient(45deg, #f7931a, #ff6b6b);
-            border-color: #f7931a;
-        }
-        .status-bar {
-            text-align: center;
-            font-size: 0.7em;
-            opacity: 0.3;
-            margin-top: 12px;
-        }
-        .badge {
-            text-align: center;
-            padding: 6px 12px;
+            max-width: 400px;
+            background-color: var(--card-bg);
             border-radius: 20px;
-            font-size: 0.7em;
-            margin: 8px auto;
-            display: inline-block;
-            width: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 92vh;
+            max-height: 780px;
         }
-        .badge-on { background: rgba(76,175,80,0.2); border: 1px solid #4CAF50; color: #4CAF50; }
-        .badge-off { background: rgba(255,107,107,0.2); border: 1px solid #ff6b6b; color: #ff6b6b; }
-        .loader {
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top: 3px solid #9945FF;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            animation: spin 0.8s linear infinite;
-            margin: 8px auto;
+        header {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 1.05rem;
+            letter-spacing: 1px;
+        }
+        /* Sistema de pestañas */
+        .tabs-nav {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .wallet-info-card {
+            background: rgba(0, 0, 0, 0.25);
+            margin: 10px 15px 8px 15px;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+        .wallet-address {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            word-break: break-all;
+            margin-top: 2px;
+            font-family: monospace;
+        }
+        .balances-grid {
+            display: flex;
+            gap: 10px;
+            margin: 0 15px 10px 15px;
+        }
+        .balance-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .balance-title {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+        .balance-value {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: var(--accent);
+            margin-top: 2px;
+        }
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 15px 15px 15px;
             display: none;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .content.active {
+            display: block;
+        }
+        .section-title {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .survey-box, .game-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        .survey-question {
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: left;
+        }
+        .option-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-main);
+            width: 100%;
+            padding: 9px;
+            margin-bottom: 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.8rem;
+            transition: background 0.2s;
+        }
+        .option-btn:hover {
+            background: rgba(56, 189, 248, 0.15);
+            border-color: var(--accent);
+        }
+        /* Estilos de la Ruleta Faucet */
+        .roulette-wheel {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: conic-gradient(var(--warning) 0deg 90deg, var(--accent) 90deg 180deg, var(--purple) 180deg 270deg, var(--success) 270deg 360deg);
+            margin: 15px auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            transition: transform 3s cubic-bezier(0.15, 0.9, 0.2, 1);
+        }
+        .roulette-inner {
+            width: 75px;
+            height: 75px;
+            background: var(--card-bg);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 0.75rem;
+            color: var(--text-main);
+        }
+        .btn-game {
+            background-color: var(--purple);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .actions-section {
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            display: flex;
+            gap: 8px;
+        }
+        .btn-action {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: white;
+            text-align: center;
+        }
+        .btn-convert { background-color: var(--warning); color: #0f172a; }
+        .btn-withdraw { background-color: var(--success); }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+        .modal-content {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 300px;
+            text-align: center;
+        }
+        .modal-content input {
+            width: 90%;
+            padding: 10px;
+            margin: 12px 0;
+            border-radius: 8px;
+            border: 1px solid var(--text-muted);
+            background: var(--bg-color);
+            color: white;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>⚡ Faucet Revolution</h1>
-        <p class="subtitle">Gana crypto con Wallet Connect</p>
-        
-        <button class="wallet-connect" onclick="connectWallet()">
-            🟣 Conectar Wallet
-        </button>
-        
-        <div id="walletInfo" style="display:none;" class="wallet-connected">
-            <span>🟢 <span class="address" id="walletAddress">Cargando...</span></span>
-            <span class="disconnect" onclick="disconnectWallet()">✕</span>
+
+    <div class="app-container">
+        <header>
+            <h1>CryptoFaucet ARS App</h1>
+        </header>
+
+        <!-- Navegación por pestañas -->
+        <div class="tabs-nav">
+            <button class="tab-btn active" onclick="cambiarTab('encuestas', this)">Encuestas</button>
+            <button class="tab-btn" onclick="cambiarTab('minijuegos', this)">Ruleta Faucet</button>
         </div>
-        
-        <div id="statusBadge" class="badge badge-off" style="text-align:center;display:block;">⏳ Cargando...</div>
-        
-        <input id="wallet" placeholder="🔑 O ingresa tu dirección manualmente">
-        <button class="secondary" onclick="register()">🚀 Registrar</button>
-        
-        <div class="balance" id="balance">$0.0000</div>
-        <div class="balance-sub" id="balanceCrypto">🪙 0.0000 SOL</div>
-        
-        <div class="stats">
-            <div class="stat">
-                <div class="value" id="rate">0.00</div>
-                <div class="label">USD/hora</div>
+
+        <!-- Wallet Nativa -->
+        <div class="wallet-info-card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="balance-title" style="margin:0;">Wallet FaucetPay API</span>
+                <span style="font-size: 0.7rem; color: var(--success);">● Sincronizada</span>
             </div>
-            <div class="stat">
-                <div class="value" id="streak">0</div>
-                <div class="label">Racha 🔥</div>
+            <div class="wallet-address" id="walletAddress">Cargando clave pública...</div>
+        </div>
+
+        <!-- Balances -->
+        <div class="balances-grid">
+            <div class="balance-box">
+                <div class="balance-title">Faucets (Sats)</div>
+                <div class="balance-value" id="balanceSats">0 Sats</div>
             </div>
-            <div class="stat">
-                <div class="value" id="photos">0</div>
-                <div class="label">Fotos 📸</div>
+            <div class="balance-box">
+                <div class="balance-title">Equivalente ARS</div>
+                <div class="balance-value" id="balanceARS">$0 ARS</div>
             </div>
         </div>
-        
-        <div class="grid-2">
-            <button onclick="doAction('photo_upload')">📸 Subir</button>
-            <button onclick="doAction('photo_download')">⬇️ Descargar</button>
-            <button onclick="doAction('review')">⭐ Reseña</button>
-            <button onclick="doAction('share')">🔄 Compartir</button>
+
+        <!-- Contenido Pestaña 1: Encuestas -->
+        <div class="content active" id="tab-encuestas">
+            <div class="section-title">Encuestas Faucet Activas (Random)</div>
+            <div class="survey-box" id="cajaPregunta"></div>
         </div>
-        
-        <div style="text-align:center;font-size:0.75em;opacity:0.5;margin:10px 0;">Moneda para retirar:</div>
-        <div class="currency-select">
-            <button class="active" onclick="selectCurrency('SOL')">◎ SOL</button>
-            <button onclick="selectCurrency('BTC')">₿ BTC</button>
-            <button onclick="selectCurrency('ETH')">⟠ ETH</button>
-            <button onclick="selectCurrency('USDC')">💵 USDC</button>
+
+        <!-- Contenido Pestaña 2: Minijuegos (Ruleta) -->
+        <div class="content" id="tab-minijuegos">
+            <div class="section-title">Ruleta de la Suerte Faucet</div>
+            <div class="game-box">
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin:0;">Gira la ruleta gratis cada 1 min para ganar satoshis extra.</p>
+                <div class="roulette-wheel" id="ruleta">
+                    <div class="roulette-inner" id="textoRuleta">GIRAR</div>
+                </div>
+                <button class="btn-game" id="btnGirar" onclick="girarRuleta()">¡Girar Ruleta!</button>
+            </div>
         </div>
-        
-        <button class="withdraw" onclick="withdraw()">💰 Retirar (mínimo $1)</button>
-        
-        <div id="loader" class="loader"></div>
-        <div id="message" class="message">💡 Conecta tu wallet o regístrate</div>
-        
-        <div class="status-bar">🔄 Actualizado cada 3s | v3.0</div>
+
+        <!-- Botones de Conversión y Retiro -->
+        <div class="actions-section">
+            <button class="btn-action btn-convert" onclick="convertirCryptoARS()">Convertir a ARS</button>
+            <button class="btn-action btn-withdraw" onclick="abrirModalRetiro()">Retirar ARS</button>
+        </div>
     </div>
-    
+
+    <!-- Modal de Retiro -->
+    <div class="modal" id="modalRetiro">
+        <div class="modal-content">
+            <h3>Retirar Pesos Argentinos</h3>
+            <p style="font-size: 0.75rem; color: var(--text-muted);">Ingresa tu Alias de Mercado Pago o CVU:</p>
+            <input type="text" id="aliasInput" placeholder="tu.alias.mp">
+            <button class="option-btn" style="background-color: var(--success); text-align: center; font-weight: bold; margin:0;" onclick="ejecutarRetiroARS()">Confirmar Envío</button>
+        </div>
+    </div>
+
     <script>
-        const API_URL = window.location.origin;
-        let publicKey = '';
-        let selectedCurrency = 'SOL';
-        
-        // ========== WALLET CONNECT ==========
-        function connectWallet() {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            
-            if (isMobile) {
-                const wallets = [
-                    { name: 'Phantom', url: 'https://phantom.app/ul/browse/' },
-                    { name: 'Solflare', url: 'https://solflare.com/ul/' },
-                    { name: 'Trust Wallet', url: 'https://link.trustwallet.com/' }
-                ];
-                
-                let html = '📱 Elige tu wallet:<br><br>';
-                wallets.forEach(w => {
-                    html += `<button onclick="window.open('${w.url}${window.location.href}','_blank')" style="margin:4px;padding:10px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:10px;color:white;cursor:pointer;font-size:14px;">
-                        ${w.name}
-                    </button>`;
-                });
-                html += `<br><br><span style="font-size:0.8em;opacity:0.5;">O ingresa tu dirección manualmente</span>`;
-                showMessage(html, 'info');
-                return;
+        const TASA_SAT_TO_ARS = 1.25; 
+        let balanceSatoshis = 0;
+        let balancePesosArgentinos = 0;
+        let userWalletAddress = '';
+        let gradosTotales = 0;
+
+        const bancoEncuestas = [
+            {
+                pregunta: "¿Qué elegirías priorizar si tuvieras que cobrar un ingreso extra hoy?",
+                opciones: [
+                    { texto: "Ahorrar en criptomonedas estables", sats: 400 },
+                    { texto: "Pesos Argentinos para gastos diarios", sats: 350 },
+                    { texto: "Invertir en proyectos tecnológicos", sats: 500 }
+                ]
+            },
+            {
+                pregunta: "¿Qué tipo de recompensa prefieres que te den las encuestas?",
+                opciones: [
+                    { texto: "Satoshis de Bitcoin directos a mi wallet", sats: 450 },
+                    { texto: "Conversión automática a Mercado Pago", sats: 400 },
+                    { texto: "Sorteos de pozos comunitarios", sats: 600 }
+                ]
+            },
+            {
+                pregunta: "¿Qué opción elegirías para manejar tus ahorros cotidianos?",
+                opciones: [
+                    { texto: "Billeteras virtuales argentinas", sats: 300 },
+                    { texto: "Criptomonedas descentralizadas", sats: 450 },
+                    { texto: "Un balance mixto entre ambas", sats: 380 }
+                ]
             }
-            
-            if (window.solana && window.solana.isPhantom) {
-                connectPhantom();
-                return;
+        ];
+
+        function inicializarWallet() {
+            const chars = 'abcdef0123456789';
+            let wallet = '0x';
+            for (let i = 0; i < 38; i++) {
+                wallet += chars.charAt(Math.floor(Math.random() * chars.length));
             }
+            userWalletAddress = wallet;
+            document.getElementById('walletAddress').innerText = userWalletAddress;
+        }
+
+        function actualizarUI() {
+            document.getElementById('balanceSats').innerText = balanceSatoshis.toLocaleString() + " Sats";
+            document.getElementById('balanceARS').innerText = "$" + balancePesosArgentinos.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ARS";
+        }
+
+        function cambiarTab(tabName, btnElement) {
+            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             
-            showMessage('🟣 Instala Phantom: https://phantom.app/', 'error');
-            window.open('https://phantom.app/', '_blank');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            btnElement.classList.add('active');
         }
-        
-        async function connectPhantom() {
-            try {
-                if (!window.solana || !window.solana.isPhantom) {
-                    showMessage('🟣 Instala Phantom', 'error');
-                    return;
-                }
-                
-                const response = await window.solana.connect();
-                publicKey = response.publicKey.toString();
-                
-                document.getElementById('walletAddress').textContent = publicKey.slice(0, 6) + '...' + publicKey.slice(-4);
-                document.getElementById('walletInfo').style.display = 'flex';
-                document.getElementById('wallet').value = publicKey;
-                localStorage.setItem('faucetWallet', publicKey);
-                showMessage('✅ Wallet conectada', 'success');
-                register();
-            } catch (error) {
-                showMessage('❌ Error: ' + error.message, 'error');
-            }
-        }
-        
-        function disconnectWallet() {
-            publicKey = '';
-            document.getElementById('walletInfo').style.display = 'none';
-            localStorage.removeItem('faucetWallet');
-            showMessage('👋 Wallet desconectada', 'info');
-        }
-        
-        // ========== FUNCIONES ==========
-        function selectCurrency(currency) {
-            selectedCurrency = currency;
-            document.querySelectorAll('.currency-select button').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.textContent.includes(currency)) btn.classList.add('active');
+
+        function cargarEncuestaAleatoria() {
+            const index = Math.floor(Math.random() * bancoEncuestas.length);
+            const encuesta = bancoEncuestas[index];
+            const contenedor = document.getElementById('cajaPregunta');
+            
+            let htmlOpciones = '';
+            encuesta.opciones.forEach((opcion) => {
+                htmlOpciones += `<button class="option-btn" onclick="reclamarFaucetReal(${opcion.sats})">${opcion.texto} (+${opcion.sats} Sats)</button>`;
             });
-            updateStats();
+
+            contenedor.innerHTML = `
+                <div class="survey-question">${encuesta.pregunta}</div>
+                ${htmlOpciones}
+            `;
         }
-        
-        async function register() {
-            publicKey = document.getElementById('wallet').value.trim();
-            if (!publicKey) return showMessage('Ingresa tu wallet', 'error');
+
+        async function reclamarFaucetReal(satsGanados) {
+            balanceSatoshis += satsGanados;
+            actualizarUI();
+            cargarEncuestaAleatoria();
+        }
+
+        // Lógica del minijuego de la ruleta faucet
+        function girarRuleta() {
+            const btnGirar = document.getElementById('btnGirar');
+            const ruleta = document.getElementById('ruleta');
+            const textoRuleta = document.getElementById('textoRuleta');
             
-            try {
-                const res = await fetch(`${API_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey })
-                });
-                const data = await res.json();
-                showMessage(data.message, data.success ? 'success' : 'error');
-                if (data.success) {
-                    localStorage.setItem('faucetWallet', publicKey);
-                    updateStats();
-                    checkStatus();
-                }
-            } catch (e) {
-                showMessage('❌ Error de conexión', 'error');
-            }
-        }
-        
-        async function doAction(action) {
-            if (!publicKey) return showMessage('Regístrate primero', 'error');
+            btnGirar.disabled = true;
+            textoRuleta.innerText = "...";
+
+            // Premios posibles de la ruleta en Satoshis
+            const premios = [150, 300, 600, 1000];
+            const premioSeleccionado = premios[Math.floor(Math.random() * premios.length)];
+
+            // Calcular rotación aleatoria (mínimo 4 vueltas completas + sector)
+            const gradosAdicionales = Math.floor(Math.random() * 360) + 1440;
+            gradosTotales += gradosAdicionales;
             
-            try {
-                const res = await fetch(`${API_URL}/action`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey, action })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    showMessage(data.message, 'success');
-                    updateStats();
-                } else {
-                    showMessage(data.message || 'Error', 'error');
-                }
-            } catch (e) {
-                showMessage('❌ Error de conexión', 'error');
-            }
+            ruleta.style.transform = `rotate(${gradosTotales}deg)`;
+
+            setTimeout(() => {
+                balanceSatoshis += premioSeleccionado;
+                actualizarUI();
+                textoRuleta.innerText = "+" + premioSeleccionado;
+                alert("¡Felicidades! La ruleta faucet te dio " + premioSeleccionado + " Satoshis.");
+                btnGirar.disabled = false;
+            }, 3000);
         }
-        
-        async function withdraw() {
-            if (!publicKey) return showMessage('Regístrate primero', 'error');
+
+        function convertirCryptoARS() {
+            if(balanceSatoshis <= 0) {
+                alert("No tienes faucets acumulados para convertir.");
+                return;
+            }
+
+            const arsGenerados = balanceSatoshis * TASA_SAT_TO_ARS;
+            balancePesosArgentinos += arsGenerados;
+            balanceSatoshis = 0; 
+
+            actualizarUI();
+            alert("¡Conversión exitosa! Tus faucets se han convertido a pesos argentinos.");
+        }
+
+        function abrirModalRetiro() {
+            if(balancePesosArgentinos <= 0) {
+                alert("Primero debes convertir tus faucets a Pesos Argentinos.");
+                return;
+            }
+            document.getElementById('modalRetiro').style.display = 'flex';
+        }
+
+        function ejecutarRetiroARS() {
+            const alias = document.getElementById('aliasInput').value;
+            if(!alias) {
+                alert("Por favor ingresa un Alias o CVU válido.");
+                return;
+            }
+
+            alert("¡Retiro de $" + balancePesosArgentinos.toLocaleString('es-AR', {minimumFractionDigits: 2}) + " ARS enviado con éxito a: " + alias + "!");
             
-            try {
-                const statsRes = await fetch(`${API_URL}/stats/${publicKey}`);
-                const stats = await statsRes.json();
-                
-                if (stats.balance < 1.0) {
-                    return showMessage(`❌ Necesitas $${(1.0 - stats.balance).toFixed(2)} más`, 'error');
-                }
-                
-                showMessage('⏳ Procesando retiro...', 'info');
-                document.getElementById('loader').style.display = 'block';
-                
-                const res = await fetch(`${API_URL}/withdraw`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey, currency: selectedCurrency })
-                });
-                
-                const data = await res.json();
-                document.getElementById('loader').style.display = 'none';
-                
-                if (data.success) {
-                    showMessage(data.message, 'success');
-                    updateStats();
-                } else {
-                    showMessage(data.message || 'Error', 'error');
-                }
-            } catch (e) {
-                document.getElementById('loader').style.display = 'none';
-                showMessage('❌ Error: ' + e.message, 'error');
-            }
+            balancePesosArgentinos = 0;
+            actualizarUI();
+            document.getElementById('modalRetiro').style.display = 'none';
+            document.getElementById('aliasInput').value = '';
         }
-        
-        async function checkStatus() {
-            try {
-                const res = await fetch(`${API_URL}/ping`);
-                const data = await res.json();
-                const badge = document.getElementById('statusBadge');
-                if (data.faucetEnabled) {
-                    badge.className = 'badge badge-on';
-                    badge.textContent = '✅ FaucetPay: ' + data.currency;
-                } else {
-                    badge.className = 'badge badge-off';
-                    badge.textContent = '⚠️ Modo simulación';
-                }
-            } catch (e) {
-                console.error('Error:', e);
-            }
-        }
-        
-        async function updateStats() {
-            if (!publicKey) return;
-            
-            try {
-                const res = await fetch(`${API_URL}/stats/${publicKey}`);
-                if (!res.ok) return;
-                const data = await res.json();
-                
-                document.getElementById('balance').textContent = `$${data.balance.toFixed(4)}`;
-                
-                const rates = { 'SOL': 0.007, 'BTC': 0.000015, 'ETH': 0.0004, 'USDC': 1.0 };
-                const rate = rates[selectedCurrency] || 0.007;
-                const cryptoAmount = data.balance * rate;
-                document.getElementById('balanceCrypto').textContent = `🪙 ${cryptoAmount.toFixed(8)} ${selectedCurrency}`;
-                
-                document.getElementById('rate').textContent = data.estimatedHourly.toFixed(2);
-                document.getElementById('streak').textContent = data.streak || 0;
-                document.getElementById('photos').textContent = data.totalPhotos || 0;
-            } catch (e) {
-                console.error('Error:', e);
-            }
-        }
-        
-        function showMessage(text, type = 'info') {
-            const msg = document.getElementById('message');
-            msg.innerHTML = text;
-            msg.className = `message ${type}`;
-        }
-        
-        // ========== INICIALIZACIÓN ==========
-        const savedWallet = localStorage.getItem('faucetWallet');
-        if (savedWallet) {
-            document.getElementById('wallet').value = savedWallet;
-            publicKey = savedWallet;
-            updateStats();
-            checkStatus();
-        }
-        
-        setInterval(updateStats, 3000);
+
+        inicializarWallet();
+        actualizarUI();
+        cargarEncuestaAleatoria();
     </script>
 </body>
 </html>
