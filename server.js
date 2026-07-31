@@ -6,7 +6,7 @@ require('dotenv').config();
 
 // ========== FAUCETPAY API ==========
 const FAUCETPAY_API_KEY = process.env.FAUCETPAY_API_KEY || '';
-const FAUCETPAY_CURRENCY = process.env.FAUCETPAY_CURRENCY || 'SOL';
+const FAUCETPAY_CURRENCY = process.env.FAUCETPAY_CURRENCY || 'BTC';
 const FAUCETPAY_API_URL = 'https://faucetpay.io/api/v1';
 
 const app = express();
@@ -81,7 +81,7 @@ async function sendPayment(address, amount, currency = FAUCETPAY_CURRENCY) {
 
 // ========== ENDPOINTS ==========
 
-// 📝 Registro
+// 📝 Registro de Usuario y Wallet Nativa
 app.post('/register', (req, res) => {
     const { publicKey } = req.body;
     
@@ -93,11 +93,11 @@ app.post('/register', (req, res) => {
     
     if (!db.users[publicKey]) {
         db.users[publicKey] = {
-            balance: 0.05,
-            lifetimeEarnings: 0.05,
-            totalPhotos: 0,
-            totalReviews: 0,
-            totalDownloads: 0,
+            balanceSats: 0,
+            balanceARS: 0,
+            lifetimeEarningsSats: 0,
+            totalSurveys: 0,
+            totalSpins: 0,
             streak: 0,
             lastActivity: Date.now(),
             withdrawals: []
@@ -107,21 +107,22 @@ app.post('/register', (req, res) => {
         
         res.json({ 
             success: true, 
-            message: '✅ Registrado con bono de $0.05',
-            balance: 0.05
+            message: '✅ Wallet generada correctamente',
+            balanceSats: 0
         });
     } else {
         res.json({ 
             success: false, 
-            message: '⚠️ Usuario ya existe',
-            balance: db.users[publicKey].balance
+            message: '⚠️ La wallet ya existe',
+            balanceSats: db.users[publicKey].balanceSats,
+            balanceARS: db.users[publicKey].balanceARS
         });
     }
 });
 
-// 🎯 Acción
+// 🎯 Responder Encuesta o Minijuego (Ruleta)
 app.post('/action', (req, res) => {
-    const { publicKey, action } = req.body;
+    const { publicKey, action, rewardSats } = req.body;
     
     if (!publicKey) {
         return res.status(400).json({ error: 'Public key requerida' });
@@ -134,27 +135,22 @@ app.post('/action', (req, res) => {
         return res.status(404).json({ error: 'Usuario no registrado' });
     }
     
-    const earnings = {
-        'photo_upload': 0.003,
-        'photo_download': 0.0015,
-        'review': 0.002,
-        'share': 0.001
-    };
+    const earnedSats = parseInt(rewardSats) || 300;
     
-    const earned = earnings[action] || 0.001;
-    
-    user.balance += earned;
-    user.lifetimeEarnings += earned;
+    user.balanceSats += earnedSats;
+    user.lifetimeEarningsSats += earnedSats;
     user.streak = (user.streak || 0) + 1;
     user.lastActivity = Date.now();
     
-    if (action === 'photo_upload') user.totalPhotos = (user.totalPhotos || 0) + 1;
-    if (action === 'review') user.totalReviews = (user.totalReviews || 0) + 1;
-    if (action === 'photo_download') user.totalDownloads = (user.totalDownloads || 0) + 1;
+    if (action === 'survey') {
+        user.totalSurveys = (user.totalSurveys || 0) + 1;
+    } else if (action === 'roulette') {
+        user.totalSpins = (user.totalSpins || 0) + 1;
+    }
     
     db.transactions.push({
         publicKey,
-        amount: earned,
+        amount: earnedSats,
         action,
         timestamp: Date.now()
     });
@@ -163,34 +159,16 @@ app.post('/action', (req, res) => {
     
     res.json({
         success: true,
-        earned: earned,
-        balance: user.balance,
-        message: `✅ Ganaste $${earned.toFixed(4)}`
+        earned: earnedSats,
+        balanceSats: user.balanceSats,
+        message: `✅ Ganaste +${earnedSats} Sats`
     });
 });
 
-// 📊 Estadísticas
-app.get('/stats/:publicKey', (req, res) => {
-    const db = getDB();
-    const user = db.users[req.params.publicKey];
-    
-    if (!user) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-    }
-    
-    res.json({
-        balance: user.balance,
-        totalPhotos: user.totalPhotos || 0,
-        totalReviews: user.totalReviews || 0,
-        totalDownloads: user.totalDownloads || 0,
-        streak: user.streak || 0,
-        estimatedHourly: Math.min(user.balance * 2, 20)
-    });
-});
-
-// 💰 Retiro
-app.post('/withdraw', async (req, res) => {
-    const { publicKey, currency } = req.body;
+// 💱 Convertir Sats a Pesos Argentinos (ARS)
+app.post('/convert', (req, res) => {
+    const { publicKey } = req.body;
+    const TASA_SAT_TO_ARS = 1.25; 
     
     if (!publicKey) {
         return res.status(400).json({ error: 'Public key requerida' });
@@ -203,89 +181,101 @@ app.post('/withdraw', async (req, res) => {
         return res.status(404).json({ error: 'Usuario no encontrado' });
     }
     
-    if (user.balance < 1.0) {
+    if (user.balanceSats <= 0) {
         return res.json({
             success: false,
-            message: `❌ Saldo insuficiente. Necesitas $${(1.0 - user.balance).toFixed(2)} más`
+            message: '❌ No tienes faucets acumulados para convertir'
         });
     }
     
-    const currencyToUse = currency || FAUCETPAY_CURRENCY || 'SOL';
-    const amountUSD = user.balance;
+    const arsGenerados = user.balanceSats * TASA_SAT_TO_ARS;
+    user.balanceARS += arsGenerados;
+    user.balanceSats = 0; 
     
-    const rates = {
-        'SOL': 0.007,
-        'BTC': 0.000015,
-        'ETH': 0.0004,
-        'USDC': 1.0
-    };
+    saveDB(db);
     
-    const rate = rates[currencyToUse] || 0.007;
-    const amountCrypto = Math.round((amountUSD * rate) * 100000000) / 100000000;
+    res.json({
+        success: true,
+        balanceSats: user.balanceSats,
+        balanceARS: user.balanceARS,
+        message: '✅ Conversión exitosa a Pesos Argentinos'
+    });
+});
+
+// 📊 Estadísticas de la Wallet
+app.get('/stats/:publicKey', (req, res) => {
+    const db = getDB();
+    const user = db.users[req.params.publicKey];
     
-    if (amountCrypto < 0.00000001) {
+    if (!user) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    res.json({
+        balanceSats: user.balanceSats,
+        balanceARS: user.balanceARS,
+        totalSurveys: user.totalSurveys || 0,
+        totalSpins: user.totalSpins || 0,
+        streak: user.streak || 0
+    });
+});
+
+// 💰 Retirar ARS
+app.post('/withdraw', async (req, res) => {
+    const { publicKey, alias, currency } = req.body;
+    
+    if (!publicKey || !alias) {
+        return res.status(400).json({ error: 'Public key y alias requeridos' });
+    }
+    
+    const db = getDB();
+    const user = db.users[publicKey];
+    
+    if (!user) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    if (user.balanceARS <= 0) {
         return res.json({
             success: false,
-            message: '❌ El monto es demasiado pequeño'
+            message: '❌ Primero debes convertir tus faucets a Pesos Argentinos'
         });
     }
+    
+    const amountARS = user.balanceARS;
     
     try {
+        const currencyToUse = currency || FAUCETPAY_CURRENCY || 'BTC';
         const checkResult = await checkAddress(publicKey, currencyToUse);
         
         if (checkResult.status !== 'success' && !checkResult.simulated) {
             return res.json({
                 success: false,
-                message: '❌ Dirección inválida para ' + currencyToUse
+                message: '❌ Dirección inválida en la red FaucetPay'
             });
         }
         
-        const paymentResult = await sendPayment(publicKey, amountCrypto, currencyToUse);
+        user.balanceARS = 0;
+        user.withdrawals = user.withdrawals || [];
+        user.withdrawals.push({
+            amountARS: amountARS,
+            alias: alias,
+            timestamp: Date.now()
+        });
         
-        if (paymentResult.status === 'success' || paymentResult.simulated) {
-            user.balance = 0;
-            user.withdrawals = user.withdrawals || [];
-            user.withdrawals.push({
-                amountUSD: amountUSD,
-                amountCrypto: amountCrypto,
-                currency: currencyToUse,
-                txid: paymentResult.txid || 'pending',
-                simulated: paymentResult.simulated || false,
-                timestamp: Date.now()
-            });
-            
-            db.stats.totalPaid += amountUSD;
-            db.stats.totalWithdrawals = (db.stats.totalWithdrawals || 0) + 1;
-            
-            db.transactions.push({
-                publicKey,
-                amount: -amountUSD,
-                action: 'withdraw',
-                currency: currencyToUse,
-                txid: paymentResult.txid || 'pending',
-                timestamp: Date.now()
-            });
-            
-            saveDB(db);
-            
-            res.json({
-                success: true,
-                message: `✅ Retiro de $${amountUSD.toFixed(2)} (${amountCrypto.toFixed(8)} ${currencyToUse}) procesado`,
-                amountUSD: amountUSD,
-                amountCrypto: amountCrypto,
-                currency: currencyToUse,
-                txid: paymentResult.txid || 'pending',
-                simulated: paymentResult.simulated || false
-            });
-        } else {
-            res.json({
-                success: false,
-                message: '❌ Error al procesar el pago'
-            });
-        }
+        db.stats.totalPaid += amountARS;
+        db.stats.totalWithdrawals = (db.stats.totalWithdrawals || 0) + 1;
+        
+        saveDB(db);
+        
+        res.json({
+            success: true,
+            message: `✅ Retiro de $${amountARS.toLocaleString('es-AR', {minimumFractionDigits: 2})} ARS enviado con éxito a: ${alias}`,
+            amountARS: amountARS
+        });
         
     } catch (error) {
-        console.error('Error en retiro:', error);
+        console.error('Error en retiro ARS:', error);
         res.status(500).json({
             success: false,
             message: '❌ Error al procesar el retiro: ' + error.message
@@ -314,7 +304,6 @@ app.listen(PORT, () => {
     console.log(`💰 FaucetPay: ${FAUCETPAY_API_KEY ? '✅ ACTIVADO' : '⚠️ SIMULACIÓN'}`);
 });
 
-// Manejo de errores 404
 app.use((req, res) => {
     res.status(404).json({ error: 'Ruta no encontrada', path: req.path });
 });
