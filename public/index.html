@@ -48,7 +48,6 @@
             font-size: 1.05rem;
             letter-spacing: 1px;
         }
-        /* Sistema de pestañas */
         .tabs-nav {
             display: flex;
             background: rgba(0, 0, 0, 0.3);
@@ -155,7 +154,6 @@
             background: rgba(56, 189, 248, 0.15);
             border-color: var(--accent);
         }
-        /* Estilos de la Ruleta Faucet */
         .roulette-wheel {
             width: 110px;
             height: 110px;
@@ -246,22 +244,19 @@
             <h1>CryptoFaucet ARS App</h1>
         </header>
 
-        <!-- Navegación por pestañas -->
         <div class="tabs-nav">
             <button class="tab-btn active" onclick="cambiarTab('encuestas', this)">Encuestas</button>
             <button class="tab-btn" onclick="cambiarTab('minijuegos', this)">Ruleta Faucet</button>
         </div>
 
-        <!-- Wallet Nativa -->
         <div class="wallet-info-card">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span class="balance-title" style="margin:0;">Wallet FaucetPay API</span>
+                <span class="balance-title" style="margin:0;">Wallet Nativa App</span>
                 <span style="font-size: 0.7rem; color: var(--success);">● Sincronizada</span>
             </div>
-            <div class="wallet-address" id="walletAddress">Cargando clave pública...</div>
+            <div class="wallet-address" id="walletAddress">Conectando al servidor...</div>
         </div>
 
-        <!-- Balances -->
         <div class="balances-grid">
             <div class="balance-box">
                 <div class="balance-title">Faucets (Sats)</div>
@@ -273,17 +268,15 @@
             </div>
         </div>
 
-        <!-- Contenido Pestaña 1: Encuestas -->
         <div class="content active" id="tab-encuestas">
             <div class="section-title">Encuestas Faucet Activas (Random)</div>
             <div class="survey-box" id="cajaPregunta"></div>
         </div>
 
-        <!-- Contenido Pestaña 2: Minijuegos (Ruleta) -->
         <div class="content" id="tab-minijuegos">
             <div class="section-title">Ruleta de la Suerte Faucet</div>
             <div class="game-box">
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin:0;">Gira la ruleta gratis cada 1 min para ganar satoshis extra.</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin:0;">Gira la ruleta para ganar satoshis extra.</p>
                 <div class="roulette-wheel" id="ruleta">
                     <div class="roulette-inner" id="textoRuleta">GIRAR</div>
                 </div>
@@ -291,14 +284,12 @@
             </div>
         </div>
 
-        <!-- Botones de Conversión y Retiro -->
         <div class="actions-section">
             <button class="btn-action btn-convert" onclick="convertirCryptoARS()">Convertir a ARS</button>
             <button class="btn-action btn-withdraw" onclick="abrirModalRetiro()">Retirar ARS</button>
         </div>
     </div>
 
-    <!-- Modal de Retiro -->
     <div class="modal" id="modalRetiro">
         <div class="modal-content">
             <h3>Retirar Pesos Argentinos</h3>
@@ -309,11 +300,12 @@
     </div>
 
     <script>
-        const TASA_SAT_TO_ARS = 1.25; 
-        let balanceSatoshis = 0;
-        let balancePesosArgentinos = 0;
-        let userWalletAddress = '';
-        let gradosTotales = 0;
+        let publicKey = localStorage.getItem('faucet_wallet');
+        if (!publicKey) {
+            publicKey = '0x' + Array.from({length: 38}, () => Math.floor(Math.random()*16).toString(16)).join('');
+            localStorage.setItem('faucet_wallet', publicKey);
+        }
+        document.getElementById('walletAddress').innerText = publicKey;
 
         const bancoEncuestas = [
             {
@@ -342,25 +334,38 @@
             }
         ];
 
-        function inicializarWallet() {
-            const chars = 'abcdef0123456789';
-            let wallet = '0x';
-            for (let i = 0; i < 38; i++) {
-                wallet += chars.charAt(Math.floor(Math.random() * chars.length));
+        let gradosTotales = 0;
+
+        async function inicializarApp() {
+            try {
+                await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey })
+                });
+                actualizarEstadisticas();
+            } catch (e) {
+                console.error("Error al registrar wallet:", e);
             }
-            userWalletAddress = wallet;
-            document.getElementById('walletAddress').innerText = userWalletAddress;
+            cargarEncuestaAleatoria();
         }
 
-        function actualizarUI() {
-            document.getElementById('balanceSats').innerText = balanceSatoshis.toLocaleString() + " Sats";
-            document.getElementById('balanceARS').innerText = "$" + balancePesosArgentinos.toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ARS";
+        async function actualizarEstadisticas() {
+            try {
+                const res = await fetch(`/stats/${publicKey}`);
+                const data = await res.json();
+                if (!data.error) {
+                    document.getElementById('balanceSats').innerText = (data.balanceSats || 0).toLocaleString() + " Sats";
+                    document.getElementById('balanceARS').innerText = "$" + (data.balanceARS || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ARS";
+                }
+            } catch (e) {
+                console.error("Error al obtener stats:", e);
+            }
         }
 
         function cambiarTab(tabName, btnElement) {
             document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
             document.getElementById('tab-' + tabName).classList.add('active');
             btnElement.classList.add('active');
         }
@@ -372,7 +377,7 @@
             
             let htmlOpciones = '';
             encuesta.opciones.forEach((opcion) => {
-                htmlOpciones += `<button class="option-btn" onclick="reclamarFaucetReal(${opcion.sats})">${opcion.texto} (+${opcion.sats} Sats)</button>`;
+                htmlOpciones += `<button class="option-btn" onclick="ejecutarAccionServer('survey', ${opcion.sats})">${opcion.texto} (+${opcion.sats} Sats)</button>`;
             });
 
             contenedor.innerHTML = `
@@ -381,13 +386,23 @@
             `;
         }
 
-        async function reclamarFaucetReal(satsGanados) {
-            balanceSatoshis += satsGanados;
-            actualizarUI();
-            cargarEncuestaAleatoria();
+        async function ejecutarAccionServer(actionType, reward) {
+            try {
+                const res = await fetch('/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey, action: actionType, rewardSats: reward })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    actualizarEstadisticas();
+                    if(actionType === 'survey') cargarEncuestaAleatoria();
+                }
+            } catch (e) {
+                console.error("Error en acción:", e);
+            }
         }
 
-        // Lógica del minijuego de la ruleta faucet
         function girarRuleta() {
             const btnGirar = document.getElementById('btnGirar');
             const ruleta = document.getElementById('ruleta');
@@ -396,65 +411,63 @@
             btnGirar.disabled = true;
             textoRuleta.innerText = "...";
 
-            // Premios posibles de la ruleta en Satoshis
             const premios = [150, 300, 600, 1000];
             const premioSeleccionado = premios[Math.floor(Math.random() * premios.length)];
 
-            // Calcular rotación aleatoria (mínimo 4 vueltas completas + sector)
-            const gradosAdicionales = Math.floor(Math.random() * 360) + 1440;
-            gradosTotales += gradosAdicionales;
-            
+            gradosTotales += Math.floor(Math.random() * 360) + 1440;
             ruleta.style.transform = `rotate(${gradosTotales}deg)`;
 
-            setTimeout(() => {
-                balanceSatoshis += premioSeleccionado;
-                actualizarUI();
+            setTimeout(async () => {
+                await ejecutarAccionServer('roulette', premioSeleccionado);
                 textoRuleta.innerText = "+" + premioSeleccionado;
                 alert("¡Felicidades! La ruleta faucet te dio " + premioSeleccionado + " Satoshis.");
                 btnGirar.disabled = false;
             }, 3000);
         }
 
-        function convertirCryptoARS() {
-            if(balanceSatoshis <= 0) {
-                alert("No tienes faucets acumulados para convertir.");
-                return;
+        async function convertirCryptoARS() {
+            try {
+                const res = await fetch('/convert', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey })
+                });
+                const data = await res.json();
+                alert(data.message);
+                actualizarEstadisticas();
+            } catch (e) {
+                alert("Error al conectar con el servidor.");
             }
-
-            const arsGenerados = balanceSatoshis * TASA_SAT_TO_ARS;
-            balancePesosArgentinos += arsGenerados;
-            balanceSatoshis = 0; 
-
-            actualizarUI();
-            alert("¡Conversión exitosa! Tus faucets se han convertido a pesos argentinos.");
         }
 
         function abrirModalRetiro() {
-            if(balancePesosArgentinos <= 0) {
-                alert("Primero debes convertir tus faucets a Pesos Argentinos.");
-                return;
-            }
             document.getElementById('modalRetiro').style.display = 'flex';
         }
 
-        function ejecutarRetiroARS() {
+        async function ejecutarRetiroARS() {
             const alias = document.getElementById('aliasInput').value;
             if(!alias) {
                 alert("Por favor ingresa un Alias o CVU válido.");
                 return;
             }
 
-            alert("¡Retiro de $" + balancePesosArgentinos.toLocaleString('es-AR', {minimumFractionDigits: 2}) + " ARS enviado con éxito a: " + alias + "!");
-            
-            balancePesosArgentinos = 0;
-            actualizarUI();
-            document.getElementById('modalRetiro').style.display = 'none';
-            document.getElementById('aliasInput').value = '';
+            try {
+                const res = await fetch('/withdraw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ publicKey, alias })
+                });
+                const data = await res.json();
+                alert(data.message);
+                document.getElementById('modalRetiro').style.display = 'none';
+                document.getElementById('aliasInput').value = '';
+                actualizarEstadisticas();
+            } catch (e) {
+                alert("Error al procesar el retiro.");
+            }
         }
 
-        inicializarWallet();
-        actualizarUI();
-        cargarEncuestaAleatoria();
+        inicializarApp();
     </script>
 </body>
 </html>
