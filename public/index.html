@@ -1,473 +1,214 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Crypto Gratis Retirable en pesos & Minijuegos</title>
-    <style>
-        :root {
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --accent: #38bdf8;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --success: #22c55e;
-            --warning: #f59e0b;
-            --purple: #a855f7;
-        }
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        .app-container {
-            width: 100%;
-            max-width: 400px;
-            background-color: var(--card-bg);
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            height: 92vh;
-            max-height: 780px;
-        }
-        header {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            text-align: center;
-        }
-        header h1 {
-            margin: 0;
-            font-size: 1.05rem;
-            letter-spacing: 1px;
-        }
-        .tabs-nav {
-            display: flex;
-            background: rgba(0, 0, 0, 0.3);
-        }
-        .tab-btn {
-            flex: 1;
-            padding: 10px;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.8rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.2s;
-            border-bottom: 2px solid transparent;
-        }
-        .tab-btn.active {
-            color: var(--accent);
-            border-bottom-color: var(--accent);
-            background: rgba(255, 255, 255, 0.02);
-        }
-        .wallet-info-card {
-            background: rgba(0, 0, 0, 0.25);
-            margin: 10px 15px 8px 15px;
-            padding: 10px 15px;
-            border-radius: 12px;
-            border: 1px solid rgba(56, 189, 248, 0.2);
-        }
-        .wallet-address {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            word-break: break-all;
-            margin-top: 2px;
-            font-family: monospace;
-        }
-        .balances-grid {
-            display: flex;
-            gap: 10px;
-            margin: 0 15px 10px 15px;
-        }
-        .balance-box {
-            flex: 1;
-            background: rgba(255, 255, 255, 0.03);
-            padding: 8px;
-            border-radius: 10px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        .balance-title {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-        }
-        .balance-value {
-            font-size: 0.9rem;
-            font-weight: bold;
-            color: var(--accent);
-            margin-top: 2px;
-        }
-        .content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 15px 15px 15px;
-            display: none;
-        }
-        .content.active {
-            display: block;
-        }
-        .section-title {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .survey-box, .game-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 12px;
-            text-align: center;
-        }
-        .survey-question {
-            font-size: 0.9rem;
-            font-weight: bold;
-            margin-bottom: 10px;
-            text-align: left;
-        }
-        .option-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-main);
-            width: 100%;
-            padding: 9px;
-            margin-bottom: 6px;
-            border-radius: 8px;
-            cursor: pointer;
-            text-align: left;
-            font-size: 0.8rem;
-            transition: background 0.2s;
-        }
-        .option-btn:hover {
-            background: rgba(56, 189, 248, 0.15);
-            border-color: var(--accent);
-        }
-        .roulette-wheel {
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            background: conic-gradient(var(--warning) 0deg 90deg, var(--accent) 90deg 180deg, var(--purple) 180deg 270deg, var(--success) 270deg 360deg);
-            margin: 15px auto;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            transition: transform 3s cubic-bezier(0.15, 0.9, 0.2, 1);
-        }
-        .roulette-inner {
-            width: 75px;
-            height: 75px;
-            background: var(--card-bg);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            font-size: 0.75rem;
-            color: var(--text-main);
-        }
-        .btn-game {
-            background-color: var(--purple);
-            color: white;
-            border: none;
-            width: 100%;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.85rem;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-        .actions-section {
-            padding: 12px 15px;
-            background: rgba(0, 0, 0, 0.3);
-            display: flex;
-            gap: 8px;
-        }
-        .btn-action {
-            flex: 1;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 0.8rem;
-            cursor: pointer;
-            color: white;
-            text-align: center;
-        }
-        .btn-convert { background-color: var(--warning); color: #0f172a; }
-        .btn-withdraw { background-color: var(--success); }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-        }
-        .modal-content {
-            background: var(--card-bg);
-            padding: 20px;
-            border-radius: 15px;
-            width: 80%;
-            max-width: 300px;
-            text-align: center;
-        }
-        .modal-content input {
-            width: 90%;
-            padding: 10px;
-            margin: 12px 0;
-            border-radius: 8px;
-            border: 1px solid var(--text-muted);
-            background: var(--bg-color);
-            color: white;
-        }
-    </style>
-</head>
-<body>
+// ==========================================
+// server.js (Modo Agregador / Faucets Externos)
+// ==========================================
+const express = require('express');
+const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
+require('dotenv').config();
 
-    <div class="app-container">
-        <header>
-            <h1>CryptoFaucet ARS App</h1>
-        </header>
+const app = express();
+const PORT = process.env.PORT || 3000;
 
-        <div class="tabs-nav">
-            <button class="tab-btn active" onclick="cambiarTab('encuestas', this)">Encuestas</button>
-            <button class="tab-btn" onclick="cambiarTab('minijuegos', this)">Ruleta Faucet</button>
-        </div>
+// ========== MIDDLEWARE ==========
+app.use(cors());
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
-        <div class="wallet-info-card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span class="balance-title" style="margin:0;">Wallet Nativa App</span>
-                <span style="font-size: 0.7rem; color: var(--success);">● Sincronizada</span>
-            </div>
-            <div class="wallet-address" id="walletAddress">Conectando al servidor...</div>
-        </div>
+// ========== LISTA DE FAUCETS EXTERNOS RECOMENDADOS ==========
+// Aquí puedes agregar los enlaces de referidos o las plataformas de terceros
+const EXTERNAL_FAUCETS = [
+    { name: "FaucetPay Official List", url: "https://faucetpay.io/page/faucet-list", desc: "Miles de faucets externos pagando al instante." },
+    { name: "Coinpayu", url: "https://www.coinpayu.com/", desc: "Gana criptomonedas viendo anuncios y completando tareas." },
+    { name: "Cointiply", url: "https://cointiply.com/", desc: "Faucet grande con múltiples opciones de juegos y encuestas." }
+];
 
-        <div class="balances-grid">
-            <div class="balance-box">
-                <div class="balance-title">Faucets (Sats)</div>
-                <div class="balance-value" id="balanceSats">0 Sats</div>
-            </div>
-            <div class="balance-box">
-                <div class="balance-title">Equivalente ARS</div>
-                <div class="balance-value" id="balanceARS">$0 ARS</div>
-            </div>
-        </div>
+// ========== BASE DE DATOS LOCAL ==========
+const DB_FILE = 'data.json';
+if (!fs.existsSync(DB_FILE)) {
+    fs.writeFileSync(DB_FILE, JSON.stringify({ 
+        users: {}, 
+        transactions: [],
+        stats: { totalUsers: 0 }
+    }));
+}
 
-        <div class="content active" id="tab-encuestas">
-            <div class="section-title">Encuestas Faucet Activas (Random)</div>
-            <div class="survey-box" id="cajaPregunta"></div>
-        </div>
+function getDB() {
+    return JSON.parse(fs.readFileSync(DB_FILE));
+}
 
-        <div class="content" id="tab-minijuegos">
-            <div class="section-title">Ruleta de la Suerte Faucet</div>
-            <div class="game-box">
-                <p style="font-size: 0.8rem; color: var(--text-muted); margin:0;">Gira la ruleta para ganar satoshis extra.</p>
-                <div class="roulette-wheel" id="ruleta">
-                    <div class="roulette-inner" id="textoRuleta">GIRAR</div>
-                </div>
-                <button class="btn-game" id="btnGirar" onclick="girarRuleta()">¡Girar Ruleta!</button>
-            </div>
-        </div>
+function saveDB(data) {
+    fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
+}
 
-        <div class="actions-section">
-            <button class="btn-action btn-convert" onclick="convertirCryptoARS()">Convertir a ARS</button>
-            <button class="btn-action btn-withdraw" onclick="abrirModalRetiro()">Retirar ARS</button>
-        </div>
-    </div>
+// ========== ENDPOINTS DE LA APLICACIÓN ==========
 
-    <div class="modal" id="modalRetiro">
-        <div class="modal-content">
-            <h3>Retirar Pesos Argentinos</h3>
-            <p style="font-size: 0.75rem; color: var(--text-muted);">Ingresa tu Alias de Mercado Pago o CVU:</p>
-            <input type="text" id="aliasInput" placeholder="tu.alias.mp">
-            <button class="option-btn" style="background-color: var(--success); text-align: center; font-weight: bold; margin:0;" onclick="ejecutarRetiroARS()">Confirmar Envío</button>
-        </div>
-    </div>
+// 📝 Registro de Usuario y Wallet Interna
+app.post('/register', (req, res) => {
+    const { publicKey } = req.body;
+    
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Public key requerida' });
+    }
+    
+    const db = getDB();
+    
+    if (!db.users[publicKey]) {
+        db.users[publicKey] = {
+            balanceSats: 0,
+            balanceARS: 0,
+            lifetimeEarningsSats: 0,
+            totalSurveys: 0,
+            totalSpins: 0,
+            streak: 0,
+            lastActivity: Date.now()
+        };
+        db.stats.totalUsers++;
+        saveDB(db);
+        
+        res.json({ 
+            success: true, 
+            message: '✅ Cuenta creada con éxito en modo agregador',
+            balanceSats: 0
+        });
+    } else {
+        res.json({ 
+            success: false, 
+            message: '⚠️ La cuenta ya existe',
+            balanceSats: db.users[publicKey].balanceSats,
+            balanceARS: db.users[publicKey].balanceARS
+        });
+    }
+});
 
-    <script>
-        let publicKey = localStorage.getItem('faucet_wallet');
-        if (!publicKey) {
-            publicKey = '0x' + Array.from({length: 38}, () => Math.floor(Math.random()*16).toString(16)).join('');
-            localStorage.setItem('faucet_wallet', publicKey);
-        }
-        document.getElementById('walletAddress').innerText = publicKey;
+// 🎯 Responder Encuesta o Ruleta (Suma puntos internos)
+app.post('/action', (req, res) => {
+    const { publicKey, action, rewardSats } = req.body;
+    
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Public key requerida' });
+    }
+    
+    const db = getDB();
+    const user = db.users[publicKey];
+    
+    if (!user) {
+        return res.status(404).json({ error: 'Usuario no registrado' });
+    }
+    
+    const earnedSats = parseInt(rewardSats) || 150;
+    
+    user.balanceSats += earnedSats;
+    user.lifetimeEarningsSats += earnedSats;
+    user.streak = (user.streak || 0) + 1;
+    user.lastActivity = Date.now();
+    
+    if (action === 'survey') {
+        user.totalSurveys = (user.totalSurveys || 0) + 1;
+    } else if (action === 'roulette') {
+        user.totalSpins = (user.totalSpins || 0) + 1;
+    }
+    
+    db.transactions.push({
+        publicKey,
+        amount: earnedSats,
+        action,
+        timestamp: Date.now()
+    });
+    
+    saveDB(db);
+    
+    res.json({
+        success: true,
+        earned: earnedSats,
+        balanceSats: user.balanceSats,
+        message: `✅ ¡Ganaste +${earnedSats} puntos internos!`
+    });
+});
 
-        const bancoEncuestas = [
-            {
-                pregunta: "¿Qué elegirías priorizar si tuvieras que cobrar un ingreso extra hoy?",
-                opciones: [
-                    { texto: "Ahorrar en criptomonedas estables", sats: 400 },
-                    { texto: "Pesos Argentinos para gastos diarios", sats: 350 },
-                    { texto: "Invertir en proyectos tecnológicos", sats: 500 }
-                ]
-            },
-            {
-                pregunta: "¿Qué tipo de recompensa prefieres que te den las encuestas?",
-                opciones: [
-                    { texto: "Satoshis de Bitcoin directos a mi wallet", sats: 450 },
-                    { texto: "Conversión automática a Mercado Pago", sats: 400 },
-                    { texto: "Sorteos de pozos comunitarios", sats: 600 }
-                ]
-            },
-            {
-                pregunta: "¿Qué opción elegirías para manejar tus ahorros cotidianos?",
-                opciones: [
-                    { texto: "Billeteras virtuales argentinas", sats: 300 },
-                    { texto: "Criptomonedas descentralizadas", sats: 450 },
-                    { texto: "Un balance mixto entre ambas", sats: 380 }
-                ]
-            }
-        ];
+// 💱 Convertir Puntos a ARS (Simulación interna)
+app.post('/convert', (req, res) => {
+    const { publicKey } = req.body;
+    const TASA_SAT_TO_ARS = 1.00; 
+    
+    if (!publicKey) {
+        return res.status(400).json({ error: 'Public key requerida' });
+    }
+    
+    const db = getDB();
+    const user = db.users[publicKey];
+    
+    if (!user) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    if (user.balanceSats <= 0) {
+        return res.json({
+            success: false,
+            message: '❌ No tienes saldo interno para convertir'
+        });
+    }
+    
+    const arsGenerados = user.balanceSats * TASA_SAT_TO_ARS;
+    user.balanceARS += arsGenerados;
+    user.balanceSats = 0; 
+    
+    saveDB(db);
+    
+    res.json({
+        success: true,
+        balanceSats: user.balanceSats,
+        balanceARS: user.balanceARS,
+        message: '✅ Conversión interna realizada con éxito'
+    });
+});
 
-        let gradosTotales = 0;
+// 🔗 Obtener la lista de Faucets Externos
+app.get('/external-faucets', (req, res) => {
+    res.json({
+        success: true,
+        faucets: EXTERNAL_FAUCETS
+    });
+});
 
-        async function inicializarApp() {
-            try {
-                await fetch('/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey })
-                });
-                actualizarEstadisticas();
-            } catch (e) {
-                console.error("Error al registrar wallet:", e);
-            }
-            cargarEncuestaAleatoria();
-        }
+// 📊 Estadísticas del Usuario
+app.get('/stats/:publicKey', (req, res) => {
+    const db = getDB();
+    const user = db.users[req.params.publicKey];
+    
+    if (!user) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+    
+    res.json({
+        balanceSats: user.balanceSats,
+        balanceARS: user.balanceARS,
+        totalSurveys: user.totalSurveys || 0,
+        totalSpins: user.totalSpins || 0,
+        streak: user.streak || 0
+    });
+});
 
-        async function actualizarEstadisticas() {
-            try {
-                const res = await fetch(`/stats/${publicKey}`);
-                const data = await res.json();
-                if (!data.error) {
-                    document.getElementById('balanceSats').innerText = (data.balanceSats || 0).toLocaleString() + " Sats";
-                    document.getElementById('balanceARS').innerText = "$" + (data.balanceARS || 0).toLocaleString('es-AR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + " ARS";
-                }
-            } catch (e) {
-                console.error("Error al obtener stats:", e);
-            }
-        }
+// 🏓 Ping
+app.get('/ping', (req, res) => {
+    res.json({ 
+        status: 'ok',
+        mode: 'external_faucets_aggregator',
+        timestamp: Date.now()
+    });
+});
 
-        function cambiarTab(tabName, btnElement) {
-            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            document.getElementById('tab-' + tabName).classList.add('active');
-            btnElement.classList.add('active');
-        }
+// 🔥 Ruta principal
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
-        function cargarEncuestaAleatoria() {
-            const index = Math.floor(Math.random() * bancoEncuestas.length);
-            const encuesta = bancoEncuestas[index];
-            const contenedor = document.getElementById('cajaPregunta');
-            
-            let htmlOpciones = '';
-            encuesta.opciones.forEach((opcion) => {
-                htmlOpciones += `<button class="option-btn" onclick="ejecutarAccionServer('survey', ${opcion.sats})">${opcion.texto} (+${opcion.sats} Sats)</button>`;
-            });
+// ========== INICIAR SERVIDOR ==========
+app.listen(PORT, () => {
+    console.log(`\n🚀 Servidor corriendo en puerto ${PORT}`);
+    console.log(`🌐 Modo: Agregador de Faucets Externos (Sin riesgo de vaciar fondos propios)`);
+});
 
-            contenedor.innerHTML = `
-                <div class="survey-question">${encuesta.pregunta}</div>
-                ${htmlOpciones}
-            `;
-        }
-
-        async function ejecutarAccionServer(actionType, reward) {
-            try {
-                const res = await fetch('/action', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey, action: actionType, rewardSats: reward })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    actualizarEstadisticas();
-                    if(actionType === 'survey') cargarEncuestaAleatoria();
-                }
-            } catch (e) {
-                console.error("Error en acción:", e);
-            }
-        }
-
-        function girarRuleta() {
-            const btnGirar = document.getElementById('btnGirar');
-            const ruleta = document.getElementById('ruleta');
-            const textoRuleta = document.getElementById('textoRuleta');
-            
-            btnGirar.disabled = true;
-            textoRuleta.innerText = "...";
-
-            const premios = [150, 300, 600, 1000];
-            const premioSeleccionado = premios[Math.floor(Math.random() * premios.length)];
-
-            gradosTotales += Math.floor(Math.random() * 360) + 1440;
-            ruleta.style.transform = `rotate(${gradosTotales}deg)`;
-
-            setTimeout(async () => {
-                await ejecutarAccionServer('roulette', premioSeleccionado);
-                textoRuleta.innerText = "+" + premioSeleccionado;
-                alert("¡Felicidades! La ruleta faucet te dio " + premioSeleccionado + " Satoshis.");
-                btnGirar.disabled = false;
-            }, 3000);
-        }
-
-        async function convertirCryptoARS() {
-            try {
-                const res = await fetch('/convert', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey })
-                });
-                const data = await res.json();
-                alert(data.message);
-                actualizarEstadisticas();
-            } catch (e) {
-                alert("Error al conectar con el servidor.");
-            }
-        }
-
-        function abrirModalRetiro() {
-            document.getElementById('modalRetiro').style.display = 'flex';
-        }
-
-        async function ejecutarRetiroARS() {
-            const alias = document.getElementById('aliasInput').value;
-            if(!alias) {
-                alert("Por favor ingresa un Alias o CVU válido.");
-                return;
-            }
-
-            try {
-                const res = await fetch('/withdraw', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ publicKey, alias })
-                });
-                const data = await res.json();
-                alert(data.message);
-                document.getElementById('modalRetiro').style.display = 'none';
-                document.getElementById('aliasInput').value = '';
-                actualizarEstadisticas();
-            } catch (e) {
-                alert("Error al procesar el retiro.");
-            }
-        }
-
-        inicializarApp();
-    </script>
-</body>
-</html>
+app.use((req, res) => {
+    res.status(404).json({ error: 'Ruta no encontrada', path: req.path });
+});
