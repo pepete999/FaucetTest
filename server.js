@@ -1,11 +1,14 @@
+// ==========================================
+// server.js (Código Completo y Adaptado)
+// ==========================================
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 require('dotenv').config();
 
-// ========== FAUCETPAY API ==========
-const FAUCETPAY_API_KEY = process.env.FAUCETPAY_API_KEY || '';
+// ========== FAUCETPAY API CONFIGURACIÓN ==========
+const FAUCETPAY_API_KEY = process.env.FAUCETPAY_API_KEY || '5cf12fcc4f252927a492b551de2e4c41c248407c6d0be15f83eed041dc4537ad';
 const FAUCETPAY_CURRENCY = process.env.FAUCETPAY_CURRENCY || 'BTC';
 const FAUCETPAY_API_URL = 'https://faucetpay.io/api/v1';
 
@@ -41,7 +44,7 @@ async function faucetPayRequest(endpoint, params = {}) {
     }
 }
 
-// ========== BASE DE DATOS ==========
+// ========== BASE DE DATOS LOCAL ==========
 const DB_FILE = 'data.json';
 if (!fs.existsSync(DB_FILE)) {
     fs.writeFileSync(DB_FILE, JSON.stringify({ 
@@ -59,7 +62,7 @@ function saveDB(data) {
     fs.writeFileSync(DB_FILE, JSON.stringify(data, null, 2));
 }
 
-// ========== FUNCIONES FAUCETPAY ==========
+// ========== FUNCIONES DE VALIDACIÓN Y PAGO ==========
 async function checkAddress(address, currency = FAUCETPAY_CURRENCY) {
     if (!FAUCETPAY_API_KEY) {
         return { status: 'success', valid: true, simulated: true };
@@ -79,7 +82,7 @@ async function sendPayment(address, amount, currency = FAUCETPAY_CURRENCY) {
     return await faucetPayRequest('send', { address, amount, currency });
 }
 
-// ========== ENDPOINTS ==========
+// ========== ENDPOINTS DE LA APLICACIÓN ==========
 
 // 📝 Registro de Usuario y Wallet Nativa
 app.post('/register', (req, res) => {
@@ -120,7 +123,7 @@ app.post('/register', (req, res) => {
     }
 });
 
-// 🎯 Responder Encuesta o Minijuego (Ruleta)
+// 🎯 Responder Encuesta o Minijuego (Aporte por faucets externos/acciones)
 app.post('/action', (req, res) => {
     const { publicKey, action, rewardSats } = req.body;
     
@@ -161,7 +164,7 @@ app.post('/action', (req, res) => {
         success: true,
         earned: earnedSats,
         balanceSats: user.balanceSats,
-        message: `✅ Ganaste +${earnedSats} Sats`
+        message: `✅ Ganaste +${earnedSats} Sats (Acumulado desde fuentes externas)`
     });
 });
 
@@ -220,7 +223,7 @@ app.get('/stats/:publicKey', (req, res) => {
     });
 });
 
-// 💰 Retirar ARS
+// 💰 Retirar ARS (Validado con FaucetPay o Simulación)
 app.post('/withdraw', async (req, res) => {
     const { publicKey, alias, currency } = req.body;
     
@@ -270,7 +273,7 @@ app.post('/withdraw', async (req, res) => {
         
         res.json({
             success: true,
-            message: `✅ Retiro de $${amountARS.toLocaleString('es-AR', {minimumFractionDigits: 2})} ARS enviado con éxito a: ${alias}`,
+            message: `✅ Retiro de $${amountARS.toLocaleString('es-AR', {minimumFractionDigits: 2})} ARS procesado con éxito para el alias: ${alias}`,
             amountARS: amountARS
         });
         
@@ -301,7 +304,7 @@ app.get('/', (req, res) => {
 // ========== INICIAR SERVIDOR ==========
 app.listen(PORT, () => {
     console.log(`\n🚀 Servidor corriendo en puerto ${PORT}`);
-    console.log(`💰 FaucetPay: ${FAUCETPAY_API_KEY ? '✅ ACTIVADO' : '⚠️ SIMULACIÓN'}`);
+    console.log(`💰 FaucetPay (API Key configurada): ${FAUCETPAY_API_KEY ? '✅ ACTIVADO' : '⚠️ APAGADO'}`);
 });
 
 app.use((req, res) => {
